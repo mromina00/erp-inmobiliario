@@ -1,0 +1,621 @@
+// ============================================================
+// SCHEMA PRISMA — ERP Financiero e Inmobiliario
+// Fuente: diagrama SVG definitivo
+// Provider: sqlite (cambiar a "postgresql" en producción)
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ============================================================
+// TABLAS CATÁLOGO / LOOKUP
+// ============================================================
+
+model tipos_unidad {
+  ID_tipo     String @id
+  Descripcion String
+
+  unidades unidades[]
+}
+
+model perfiles_cobro {
+  ID_perfil   String @id
+  Descripcion String
+
+  unidades unidades[]
+}
+
+model estados_unidad {
+  ID_estado_unidad String @id
+  Descripcion      String
+
+  unidades unidades[]
+}
+
+model edificios {
+  ID_edificio String @id
+  Nombre      String
+
+  unidades unidades[]
+}
+
+model roles_persona {
+  ID_rol      String @id
+  Descripcion String
+
+  personas personas[]
+}
+
+model tipos_documento {
+  ID_tipo_doc String @id
+  Descripcion String
+
+  personas personas[]
+}
+
+model tipos_persona {
+  ID_tipo_persona String @id
+  Descripcion     String
+
+  personas personas[]
+}
+
+model estados_persona {
+  ID_estado_persona String @id
+  Descripcion       String
+
+  personas personas[]
+}
+
+model tipos_cuenta {
+  ID_tipo_cuenta String @id
+  Descripcion    String
+
+  cuentas cuentas[]
+}
+
+model monedas {
+  ID_moneda   String @id
+  Descripcion String
+  Simbolo     String
+
+  cuentas cuentas[]
+}
+
+model marcas_tarjeta {
+  ID_marca    String @id
+  Descripcion String
+
+  tarjetas tarjetas[]
+}
+
+model estados_resumen {
+  ID_estado_resumen String @id
+  Descripcion       String
+
+  resumenes_tarjeta resumenes_tarjeta[]
+}
+
+model tipos_indice {
+  ID_indice   String @id
+  Descripcion String
+
+  contratos contratos[]
+}
+
+model periodicidades {
+  ID_periodicidad String @id
+  Descripcion     String
+
+  contratos contratos[]
+}
+
+model estados_contrato {
+  ID_estado_contrato String @id
+  Descripcion        String
+
+  contratos contratos[]
+}
+
+model estados_periodo {
+  ID_estado_periodo String @id
+  Descripcion       String
+
+  periodos_contrato    periodos_contrato[]
+  periodos_comerciales periodos_comerciales[]
+}
+
+model imputaciones {
+  ID_imputacion String @id
+  Descripcion   String
+
+  cobros_alquiler cobros_alquiler[]
+}
+
+model tipos_servicio {
+  ID_tipo_serv String @id
+  Descripcion  String
+
+  servicios_propiedades servicios_propiedades[]
+}
+
+model estados_boleta {
+  ID_estado_boleta String @id
+  Descripcion      String
+
+  boletas_servicios boletas_servicios[]
+}
+
+model responsables_pago {
+  ID_responsable String @id
+  Descripcion    String
+
+  boletas_servicios boletas_servicios[]
+}
+
+model medios_pago {
+  ID_medio    String @id
+  Descripcion String
+
+  libro_diario libro_diario[]
+}
+
+model subcategorias_flujo {
+  ID_subcat       String @id
+  Tipo_Movimiento String
+  Categoria_Padre String
+  Descripcion     String
+
+  libro_diario libro_diario[]
+}
+
+model tipo_comprobante {
+  ID_tipo_comprobante String @id
+  Descripcion         String
+
+  iva_compras iva_compras[]
+  iva_ventas  iva_ventas[]
+}
+
+model estados_vencimiento {
+  ID_estado_vencimiento String @id
+  Descripcion           String
+
+  vencimientos vencimientos[]
+}
+
+// ============================================================
+// MÓDULO BASE: PERSONAS Y ENTIDADES
+// ============================================================
+
+model personas {
+  ID_persona        String  @id
+  Nombre            String
+  ID_tipo_doc       String
+  Documento         String?
+  ID_tipo_persona   String
+  ID_rol_persona    String
+  Direccion         String?
+  Localidad         String?
+  Provincia         String?
+  Telefono          String?
+  Email             String?
+  ID_estado_persona String
+  Notas             String?
+
+  tipo_doc       tipos_documento @relation(fields: [ID_tipo_doc], references: [ID_tipo_doc])
+  tipo_persona   tipos_persona   @relation(fields: [ID_tipo_persona], references: [ID_tipo_persona])
+  rol_persona    roles_persona   @relation(fields: [ID_rol_persona], references: [ID_rol])
+  estado_persona estados_persona @relation(fields: [ID_estado_persona], references: [ID_estado_persona])
+
+  // Relaciones inversas
+  datos_juridicos_empresa       datos_juridicos[]       @relation("EmpresaJuridica")
+  datos_juridicos_representante datos_juridicos[]       @relation("RepresentanteJuridico")
+  cuentas                       cuentas[]
+  tarjetas_usuario              tarjetas[]
+  servicios_titular             servicios_propiedades[]
+  contratos_inquilino           contratos[]             @relation("ContratoInquilino")
+  contratos_firmante            contratos[]             @relation("ContratoFirmante")
+  garantes                      garantes_contrato[]
+  iva_compras_empresa           iva_compras[]           @relation("IvaCompraEmpresa")
+  iva_compras_proveedor         iva_compras[]           @relation("IvaCompraProveedor")
+  iva_ventas_empresa            iva_ventas[]            @relation("IvaVentaEmpresa")
+  iva_ventas_cliente            iva_ventas[]            @relation("IvaVentaCliente")
+  libro_diario                  libro_diario[]
+}
+
+model datos_juridicos {
+  ID_juridico              String  @id
+  ID_persona_empresa       String
+  Inscripcion_comercial    String?
+  ID_persona_representante String
+  Cargo_representante      String?
+
+  empresa       personas @relation("EmpresaJuridica", fields: [ID_persona_empresa], references: [ID_persona])
+  representante personas @relation("RepresentanteJuridico", fields: [ID_persona_representante], references: [ID_persona])
+}
+
+// ============================================================
+// MÓDULO 1: NÚCLEO INMOBILIARIO Y ALQUILERES
+// ============================================================
+
+model unidades {
+  ID_unidad     String  @id
+  Nombre_Unidad String
+  ID_tipo       String
+  ID_perfil     String
+  ID_edificio   String?
+  Piso          Int?
+  Numero        Int?
+  Dormitorios   Int?
+  Direccion     String
+  ID_estado     String
+  Equipamiento  String?
+  Notas         String?
+
+  tipo     tipos_unidad   @relation(fields: [ID_tipo], references: [ID_tipo])
+  perfil   perfiles_cobro @relation(fields: [ID_perfil], references: [ID_perfil])
+  edificio edificios?     @relation(fields: [ID_edificio], references: [ID_edificio])
+  estado   estados_unidad @relation(fields: [ID_estado], references: [ID_estado_unidad])
+
+  contratos             contratos[]
+  servicios_propiedades servicios_propiedades[]
+  libro_diario          libro_diario[]
+}
+
+model contratos {
+  ID_contrato            String   @id
+  ID_unidad              String
+  ID_persona_inquilino   String
+  ID_persona_firmante    String?
+  Duracion_anos          Int
+  Fecha_Inicio           DateTime
+  Fecha_Vencimiento      DateTime
+  Monto_Alquiler_Inicial Decimal
+  ID_tipo_indice         String?
+  ID_periodicidad        String?
+  Monto_Expensas_Inicial Decimal
+  Monto_Cochera_Inicial  Decimal?
+  ID_contrato_anterior   String?
+  ID_estado_contrato     String
+  Notas                  String?
+
+  unidad            unidades         @relation(fields: [ID_unidad], references: [ID_unidad])
+  inquilino         personas         @relation("ContratoInquilino", fields: [ID_persona_inquilino], references: [ID_persona])
+  firmante          personas?        @relation("ContratoFirmante", fields: [ID_persona_firmante], references: [ID_persona])
+  tipo_indice       tipos_indice?    @relation(fields: [ID_tipo_indice], references: [ID_indice])
+  periodicidad      periodicidades?  @relation(fields: [ID_periodicidad], references: [ID_periodicidad])
+  estado_contrato   estados_contrato @relation(fields: [ID_estado_contrato], references: [ID_estado_contrato])
+  contrato_anterior contratos?       @relation("Renovacion", fields: [ID_contrato_anterior], references: [ID_contrato])
+  renovaciones      contratos[]      @relation("Renovacion")
+
+  garantes             garantes_contrato[]
+  periodos_contrato    periodos_contrato[]
+  periodos_comerciales periodos_comerciales[]
+  actualizaciones      actualizaciones[]
+}
+
+model garantes_contrato {
+  ID_garante_contrato String @id
+  ID_contrato         String
+  ID_persona_garante  String
+
+  contrato contratos @relation(fields: [ID_contrato], references: [ID_contrato])
+  garante  personas  @relation(fields: [ID_persona_garante], references: [ID_persona])
+}
+
+model periodos_contrato {
+  ID_periodo_contrato String  @id
+  ID_contrato         String
+  Numero_Cuota        Int
+  Mes_Ano             String
+  Monto_Alquiler      Decimal
+  Monto_Expensas      Decimal
+  Monto_Cochera       Decimal
+  Monto_Municipalidad Decimal
+  Monto_Otros         Decimal
+  Porcentaje_Recargo  Decimal
+  Monto_Recargo       Decimal
+  ID_estado_periodo   String
+  Notas               String?
+
+  contrato       contratos       @relation(fields: [ID_contrato], references: [ID_contrato])
+  estado_periodo estados_periodo @relation(fields: [ID_estado_periodo], references: [ID_estado_periodo])
+
+  cobros_alquiler cobros_alquiler[]
+}
+
+model periodos_comerciales {
+  ID_periodo_comercial String  @id
+  ID_contrato          String
+  Mes_Ano              String
+  Alquiler_Neto        Decimal
+  IVA_21               Decimal
+  Monto_Municipalidad  Decimal
+  Monto_Agua           Decimal
+  Compras_Deducir      Decimal
+  Retencion_Ganancias  Decimal
+  Nro_Factura_A        String?
+  ID_estado_periodo    String
+  Notas                String?
+
+  contrato       contratos       @relation(fields: [ID_contrato], references: [ID_contrato])
+  estado_periodo estados_periodo @relation(fields: [ID_estado_periodo], references: [ID_estado_periodo])
+
+  cobros_alquiler cobros_alquiler[]
+}
+
+model cobros_alquiler {
+  ID_cobro             String   @id
+  ID_periodo_contrato  String?
+  ID_periodo_comercial String?
+  Fecha_Pago           DateTime
+  Monto_Pagado         Decimal
+  Imputacion_Pago      String
+  ID_cuenta_destino    String
+  Nro_Recibo           String?
+  Referencia_Pago      String?
+  Notas                String?
+
+  periodo_contrato  periodos_contrato?    @relation(fields: [ID_periodo_contrato], references: [ID_periodo_contrato])
+  periodo_comercial periodos_comerciales? @relation(fields: [ID_periodo_comercial], references: [ID_periodo_comercial])
+  imputacion        imputaciones          @relation(fields: [Imputacion_Pago], references: [ID_imputacion])
+  cuenta_destino    cuentas               @relation(fields: [ID_cuenta_destino], references: [ID_cuenta])
+}
+
+model actualizaciones {
+  ID_actualizacion       String   @id
+  ID_contrato            String
+  Fecha_Actualizacion    DateTime
+  Valor_Indice_Inicio    Decimal
+  Valor_Indice_Actual    Decimal
+  Porcentaje_Aplicado    Decimal
+  Monto_Anterior         Decimal
+  Monto_Calculado        Decimal
+  Monto_Final_Redondeado Decimal
+  Notas                  String?
+
+  contrato contratos @relation(fields: [ID_contrato], references: [ID_contrato])
+}
+
+// ============================================================
+// MÓDULO 2: SERVICIOS Y TASAS MUNICIPALES
+// ============================================================
+
+model servicios_propiedades {
+  ID_servicio_prop   String  @id
+  ID_unidad          String
+  ID_tipo_servicio   String
+  Empresa_Prestadora String
+  Numero_Cuenta      String?
+  Numero_Medidor     String?
+  ID_persona_titular String
+  Notas              String?
+
+  unidad        unidades       @relation(fields: [ID_unidad], references: [ID_unidad])
+  tipo_servicio tipos_servicio @relation(fields: [ID_tipo_servicio], references: [ID_tipo_serv])
+  titular       personas       @relation(fields: [ID_persona_titular], references: [ID_persona])
+
+  boletas_servicios boletas_servicios[]
+}
+
+model boletas_servicios {
+  ID_boleta          String    @id
+  ID_servicio_prop   String
+  Periodo            String
+  Numero_Liquidacion Int
+  Lectura_Anterior   Decimal?
+  Lectura_Actual     Decimal?
+  Consumo_Monto      Decimal?
+  Fecha_Vencimiento  DateTime
+  Importe            Decimal
+  Responsable_Pago   String
+  Fecha_Pago         DateTime?
+  ID_cuenta_pago     String?
+  ID_estado_boleta   String
+  Notas              String?
+
+  servicio_prop    servicios_propiedades @relation(fields: [ID_servicio_prop], references: [ID_servicio_prop])
+  responsable_pago responsables_pago     @relation(fields: [Responsable_Pago], references: [ID_responsable])
+  cuenta_pago      cuentas?              @relation(fields: [ID_cuenta_pago], references: [ID_cuenta])
+  estado_boleta    estados_boleta        @relation(fields: [ID_estado_boleta], references: [ID_estado_boleta])
+}
+
+// ============================================================
+// MÓDULO 3: TARJETAS DE CRÉDITO
+// ============================================================
+
+model tarjetas {
+  ID_tarjeta           String   @id
+  ID_tarjeta_principal String?
+  Banco_Institucion    String?
+  ID_marca_tarjeta     String
+  Nombre_Comercial     String
+  Ultimos_4_digitos    String?
+  ID_persona_usuario   String
+  Limite_Credito       Decimal?
+  ID_cuenta_debito     String?
+  Notas                String?
+
+  marca_tarjeta        marcas_tarjeta @relation(fields: [ID_marca_tarjeta], references: [ID_marca])
+  persona_usuario      personas       @relation(fields: [ID_persona_usuario], references: [ID_persona])
+  tarjeta_principal    tarjetas?      @relation("TarjetaAdicional", fields: [ID_tarjeta_principal], references: [ID_tarjeta])
+  tarjetas_adicionales tarjetas[]     @relation("TarjetaAdicional")
+  cuenta_debito        cuentas?       @relation(fields: [ID_cuenta_debito], references: [ID_cuenta])
+
+  gastos            tarjetas_gastos[]
+  resumenes_tarjeta resumenes_tarjeta[]
+}
+
+model tarjetas_gastos {
+  ID_gasto              String   @id
+  ID_tarjeta            String
+  Fecha_Compra          DateTime
+  Detalle_Lugar         String
+  Monto_Total_Operacion Decimal
+  Cuotas_Totales        Int
+  Notas                 String?
+
+  tarjeta tarjetas @relation(fields: [ID_tarjeta], references: [ID_tarjeta])
+
+  cuotas tarjetas_cuotas_resumen[]
+}
+
+model resumenes_tarjeta {
+  ID_resumen                String    @id
+  ID_tarjeta_titular        String
+  Fecha_Cierre              DateTime
+  Fecha_Vencimiento         DateTime
+  Mantenimiento_Cuenta      Decimal?
+  IVA_Comisiones            Decimal?
+  Impuestos_Percepciones    Decimal?
+  Fecha_Pago                DateTime?
+  Monto_Pagado_Real         Decimal?
+  ID_cuenta_pago            String?
+  ID_estado_resumen         String
+  Fecha_Proximo_Cierre      DateTime
+  Fecha_Proximo_Vencimiento DateTime
+  Conciliado                Boolean
+
+  tarjeta        tarjetas        @relation(fields: [ID_tarjeta_titular], references: [ID_tarjeta])
+  cuenta_pago    cuentas?        @relation(fields: [ID_cuenta_pago], references: [ID_cuenta])
+  estado_resumen estados_resumen @relation(fields: [ID_estado_resumen], references: [ID_estado_resumen])
+
+  cuotas       tarjetas_cuotas_resumen[]
+  libro_diario libro_diario[]
+}
+
+model tarjetas_cuotas_resumen {
+  ID_cuota_resumen    String  @id
+  ID_gasto            String
+  Numero_Cuota_Actual Int
+  ID_resumen_asociado String?
+  Monto_Cuota         Decimal
+
+  gasto            tarjetas_gastos    @relation(fields: [ID_gasto], references: [ID_gasto])
+  resumen_asociado resumenes_tarjeta? @relation(fields: [ID_resumen_asociado], references: [ID_resumen])
+}
+
+// ============================================================
+// MÓDULO 4: FINANZAS, BANCOS Y LIBRO DIARIO
+// ============================================================
+
+model cuentas {
+  ID_cuenta          String  @id
+  Nombre_Cuenta      String
+  ID_tipo_cuenta     String
+  ID_moneda          String
+  ID_persona_titular String
+  Banco_Institucion  String?
+  Sucursal           String?
+  Numero_cuenta      String?
+  CBU_CVU            String?
+  Alias              String?
+  Notas              String?
+
+  tipo_cuenta tipos_cuenta @relation(fields: [ID_tipo_cuenta], references: [ID_tipo_cuenta])
+  moneda      monedas      @relation(fields: [ID_moneda], references: [ID_moneda])
+  titular     personas     @relation(fields: [ID_persona_titular], references: [ID_persona])
+
+  cobros_alquiler   cobros_alquiler[]
+  boletas_servicios boletas_servicios[]
+  resumenes_tarjeta resumenes_tarjeta[]
+  tarjetas_debito   tarjetas[]
+  libro_diario      libro_diario[]
+}
+
+model libro_diario {
+  ID_movimiento         String   @id
+  Fecha                 DateTime
+  ID_cuenta             String
+  ID_persona_entidad    String
+  ID_unidad             String?
+  ID_resumen_tarjeta    String?
+  Detalle               String
+  Monto                 Decimal
+  ID_medio_pago         String
+  ID_subcategoria_flujo String
+  Modulo_Origen         String
+  ID_referencia_origen  String?
+  Conciliado            Boolean
+  Notas                 String?
+
+  cuenta          cuentas             @relation(fields: [ID_cuenta], references: [ID_cuenta])
+  persona_entidad personas            @relation(fields: [ID_persona_entidad], references: [ID_persona])
+  unidad          unidades?           @relation(fields: [ID_unidad], references: [ID_unidad])
+  resumen_tarjeta resumenes_tarjeta?  @relation(fields: [ID_resumen_tarjeta], references: [ID_resumen])
+  medio_pago      medios_pago         @relation(fields: [ID_medio_pago], references: [ID_medio])
+  subcategoria    subcategorias_flujo @relation(fields: [ID_subcategoria_flujo], references: [ID_subcat])
+}
+
+// ============================================================
+// MÓDULO 5: CONTABILIDAD FISCAL (LIBROS DE IVA)
+// ============================================================
+
+model iva_compras {
+  ID_iva_compra           String   @id
+  ID_persona_empresa      String
+  ID_persona_proveedor    String
+  Fecha_Registro          DateTime
+  Fecha_Factura           DateTime
+  ID_tipo_comprobante     String
+  Factura_Numero          String
+  Neto_Gravado_21         Decimal?
+  IVA_21                  Decimal?
+  Neto_Gravado_105        Decimal?
+  IVA_105                 Decimal?
+  Monto_No_Gravado_Exento Decimal?
+  Retencion_IVA           Decimal?
+  Retencion_Ganancias     Decimal?
+  Retencion_IIBB          Decimal?
+  Total_Facturado         Decimal
+  Notas                   String?
+
+  empresa          personas         @relation("IvaCompraEmpresa", fields: [ID_persona_empresa], references: [ID_persona])
+  proveedor        personas         @relation("IvaCompraProveedor", fields: [ID_persona_proveedor], references: [ID_persona])
+  tipo_comprobante tipo_comprobante @relation(fields: [ID_tipo_comprobante], references: [ID_tipo_comprobante])
+}
+
+model iva_ventas {
+  ID_iva_venta            String   @id
+  ID_persona_empresa      String
+  ID_persona_cliente      String
+  Fecha_Registro          DateTime
+  Fecha_Factura           DateTime
+  ID_tipo_comprobante     String
+  Factura_Numero          String
+  Neto_Gravado_21         Decimal?
+  IVA_21                  Decimal?
+  Neto_Gravado_105        Decimal?
+  IVA_105                 Decimal?
+  Monto_No_Gravado_Exento Decimal?
+  Total_Facturado         Decimal
+  Notas                   String?
+
+  empresa          personas         @relation("IvaVentaEmpresa", fields: [ID_persona_empresa], references: [ID_persona])
+  cliente          personas         @relation("IvaVentaCliente", fields: [ID_persona_cliente], references: [ID_persona])
+  tipo_comprobante tipo_comprobante @relation(fields: [ID_tipo_comprobante], references: [ID_tipo_comprobante])
+}
+
+// ============================================================
+// MÓDULO 6: ALERTAS Y CALENDARIO DE VENCIMIENTOS
+// ============================================================
+
+model vencimientos {
+  ID_vencimiento        String    @id
+  Fecha_Vencimiento     DateTime
+  Detalle               String
+  Monto_Estimado        Decimal
+  ID_estado_vencimiento String
+  Origen_Modulo         String
+  ID_referencia_origen  String?
+  Fecha_Pago_Real       DateTime?
+  Notas                 String?
+
+  estado estados_vencimiento @relation(fields: [ID_estado_vencimiento], references: [ID_estado_vencimiento])
+}
