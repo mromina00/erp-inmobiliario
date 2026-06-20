@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { registerHandlers } from './handlers.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -11,7 +12,7 @@ function createWindow() {
     width: 1280,
     height: 800,
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, '../preload/index.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
     },
@@ -25,7 +26,10 @@ function createWindow() {
   }
 }
 
-app.whenReady().then(createWindow)
+app.whenReady().then(() => {
+  registerHandlers()
+  createWindow()
+})
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
