@@ -1,27 +1,30 @@
-import { useState, useEffect } from 'react'
+import { HashRouter, Routes, Route } from 'react-router-dom'
+import Sidebar from './components/Sidebar'
+import Dashboard from './pages/Dashboard'
+import Placeholder from './pages/Placeholder'
+import './App.css'
 
 function App() {
-  const [personas, setPersonas] = useState([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    window.api.personas.getAll().then((data) => {
-      console.log('Personas:', data)
-      setPersonas(data)
-      setLoading(false)
-    })
-  }, [])
-
   return (
-    <div style={{ padding: '2rem', fontFamily: 'sans-serif' }}>
-      <h1>ERP Inmobiliario</h1>
-      <h2>Prueba de conexión Prisma + Electron</h2>
-      {loading ? (
-        <p>Cargando...</p>
-      ) : (
-        <p>Personas encontradas: {personas.length}</p>
-      )}
-    </div>
+    <HashRouter>
+      <div className="app-layout">
+        <Sidebar />
+        <div className="content">
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/unidades" element={<Placeholder title="Edificios y unidades" />} />
+            <Route path="/contratos" element={<Placeholder title="Contratos" />} />
+            <Route path="/cobros" element={<Placeholder title="Cobros de alquiler" />} />
+            <Route path="/boletas" element={<Placeholder title="Boletas y tasas" />} />
+            <Route path="/tarjetas" element={<Placeholder title="Tarjetas" />} />
+            <Route path="/libro-diario" element={<Placeholder title="Libro diario" />} />
+            <Route path="/iva" element={<Placeholder title="IVA compras / ventas" />} />
+            <Route path="/personas" element={<Placeholder title="Personas" />} />
+            <Route path="/vencimientos" element={<Placeholder title="Vencimientos" />} />
+          </Routes>
+        </div>
+      </div>
+    </HashRouter>
   )
 }
 
