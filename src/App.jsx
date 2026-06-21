@@ -3,6 +3,8 @@ import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
 import Placeholder from './pages/Placeholder'
 import Personas from './pages/Personas'
+import Unidades from './pages/Unidades'
+import Edificios from './pages/Edificios'
 import './App.css'
 
 function App() {
@@ -13,7 +15,8 @@ function App() {
         <div className="content">
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/unidades" element={<Placeholder title="Edificios y unidades" />} />
+            <Route path="/unidades" element={<Unidades />} />
+            <Route path="/edificios" element={<Edificios />} />
             <Route path="/contratos" element={<Placeholder title="Contratos" />} />
             <Route path="/cobros" element={<Placeholder title="Cobros de alquiler" />} />
             <Route path="/boletas" element={<Placeholder title="Boletas y tasas" />} />

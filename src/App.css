@@ -183,3 +183,46 @@ input, select, textarea, button {
 input::placeholder {
   color: #999;
 }
+
+.units-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.unit-card {
+  background: #fff;
+  border: 1px solid #e5e5e3;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+
+.unit-name {
+  font-weight: 500;
+  font-size: 15px;
+  margin: 0;
+}
+
+.unit-sub {
+  font-size: 12px;
+  color: #999;
+  margin: 2px 0 0;
+}
+
+.badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.badge-ok {
+  background: #e3f5e9;
+  color: #1e8a4c;
+}
+
+.badge-neutral {
+  background: #f0f0ee;
+  color: #777;
+}

@@ -10,39 +10,34 @@ const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  await prisma.tipos_documento.createMany({
+  await prisma.tipos_unidad.createMany({
     data: [
-      { ID_tipo_doc: 'DNI', Descripcion: 'DNI' },
-      { ID_tipo_doc: 'CUIT', Descripcion: 'CUIT' },
-      { ID_tipo_doc: 'PASAPORTE', Descripcion: 'Pasaporte' },
+      { ID_tipo: 'DEPARTAMENTO', Descripcion: 'Departamento' },
+      { ID_tipo: 'LOCAL', Descripcion: 'Local' },
+      { ID_tipo: 'CASA', Descripcion: 'Casa' },
+      { ID_tipo: 'PROPIEDAD_EXTERNA', Descripcion: 'Propiedad externa' },
+      { ID_tipo: 'LOTE', Descripcion: 'Lote' },
     ],
   })
 
-  await prisma.tipos_persona.createMany({
+  await prisma.perfiles_cobro.createMany({
     data: [
-      { ID_tipo_persona: 'FISICA', Descripcion: 'Física' },
-      { ID_tipo_persona: 'JURIDICA', Descripcion: 'Jurídica' },
+      { ID_perfil: 'ESTANDAR', Descripcion: 'Estándar' },
+      { ID_perfil: 'COMERCIAL', Descripcion: 'Comercial' },
+      { ID_perfil: 'EGRESO', Descripcion: 'Egreso' },
     ],
   })
 
-  await prisma.roles_persona.createMany({
+  await prisma.estados_unidad.createMany({
     data: [
-      { ID_rol: 'INQUILINO', Descripcion: 'Inquilino' },
-      { ID_rol: 'PROPIETARIO', Descripcion: 'Propietario' },
-      { ID_rol: 'GARANTE', Descripcion: 'Garante' },
-      { ID_rol: 'PROVEEDOR', Descripcion: 'Proveedor' },
-      { ID_rol: 'FIRMANTE', Descripcion: 'Firmante' },
+      { ID_estado_unidad: 'OCUPADA', Descripcion: 'Ocupada' },
+      { ID_estado_unidad: 'LIBRE', Descripcion: 'Libre' },
+      { ID_estado_unidad: 'NO_DISPONIBLE', Descripcion: 'No disponible' },
+      { ID_estado_unidad: 'USO_PROPIO', Descripcion: 'Uso propio' },
     ],
   })
 
-  await prisma.estados_persona.createMany({
-    data: [
-      { ID_estado_persona: 'ACTIVO', Descripcion: 'Activo' },
-      { ID_estado_persona: 'INACTIVO', Descripcion: 'Inactivo' },
-    ],
-  })
-
-  console.log('Catálogos cargados correctamente')
+  console.log('Catálogos de unidades cargados correctamente')
 }
 
 main()
