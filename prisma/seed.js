@@ -10,34 +10,30 @@ const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  await prisma.tipos_unidad.createMany({
+  await prisma.estados_contrato.createMany({
     data: [
-      { ID_tipo: 'DEPARTAMENTO', Descripcion: 'Departamento' },
-      { ID_tipo: 'LOCAL', Descripcion: 'Local' },
-      { ID_tipo: 'CASA', Descripcion: 'Casa' },
-      { ID_tipo: 'PROPIEDAD_EXTERNA', Descripcion: 'Propiedad externa' },
-      { ID_tipo: 'LOTE', Descripcion: 'Lote' },
+      { ID_estado_contrato: 'VIGENTE', Descripcion: 'Vigente' },
+      { ID_estado_contrato: 'FINALIZADO', Descripcion: 'Finalizado' },
+      { ID_estado_contrato: 'RENOVADO', Descripcion: 'Renovado' },
     ],
   })
 
-  await prisma.perfiles_cobro.createMany({
+  await prisma.tipos_indice.createMany({
     data: [
-      { ID_perfil: 'ESTANDAR', Descripcion: 'Estándar' },
-      { ID_perfil: 'COMERCIAL', Descripcion: 'Comercial' },
-      { ID_perfil: 'EGRESO', Descripcion: 'Egreso' },
+      { ID_indice: 'ICL', Descripcion: 'ICL' },
+      { ID_indice: 'IPC', Descripcion: 'IPC' },
+      { ID_indice: 'SIN_INDEXACION', Descripcion: 'Sin indexación' },
     ],
   })
 
-  await prisma.estados_unidad.createMany({
+  await prisma.periodicidades.createMany({
     data: [
-      { ID_estado_unidad: 'OCUPADA', Descripcion: 'Ocupada' },
-      { ID_estado_unidad: 'LIBRE', Descripcion: 'Libre' },
-      { ID_estado_unidad: 'NO_DISPONIBLE', Descripcion: 'No disponible' },
-      { ID_estado_unidad: 'USO_PROPIO', Descripcion: 'Uso propio' },
+      { ID_periodicidad: 'CUATRIMESTRAL', Descripcion: 'Cuatrimestral' },
+      { ID_periodicidad: 'SEMESTRAL', Descripcion: 'Semestral' },
     ],
   })
 
-  console.log('Catálogos de unidades cargados correctamente')
+  console.log('Catálogos de contratos cargados correctamente')
 }
 
 main()

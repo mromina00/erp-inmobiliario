@@ -1,6 +1,15 @@
 import { ipcMain } from 'electron'
 import prisma from './db.js'
 
+function toPlain(obj) {
+  return JSON.parse(JSON.stringify(obj, (key, value) => {
+    if (value && typeof value === 'object' && typeof value.toFixed === 'function') {
+      return Number(value)
+    }
+    return value
+  }))
+}
+
 export function registerHandlers() {
   // ============================================================
   // PERSONAS
@@ -54,8 +63,8 @@ export function registerHandlers() {
   // ============================================================
   // UNIDADES
   // ============================================================
-  ipcMain.handle('unidades:getAll', async () => {
-    return await prisma.unidades.findMany({
+ipcMain.handle('unidades:getAll', async () => {
+    const data = await prisma.unidades.findMany({
       include: {
         tipo: true,
         perfil: true,
@@ -68,6 +77,7 @@ export function registerHandlers() {
       },
       orderBy: { Nombre_Unidad: 'asc' },
     })
+    return toPlain(data)
   })
 
   ipcMain.handle('unidades:create', async (event, data) => {
@@ -80,6 +90,83 @@ export function registerHandlers() {
 
   ipcMain.handle('unidades:delete', async (event, id) => {
     return await prisma.unidades.delete({ where: { ID_unidad: id } })
+  })
+
+  // ============================================================
+  // CONTRATOS
+  // ============================================================
+ipcMain.handle('contratos:getAll', async () => {
+    const data = await prisma.contratos.findMany({
+      include: {
+        unidad: { include: { edificio: true } },
+        inquilino: true,
+        firmante: true,
+        tipo_indice: true,
+        periodicidad: true,
+        estado_contrato: true,
+        garantes: { include: { garante: true } },
+      },
+      orderBy: { Fecha_Inicio: 'desc' },
+    })
+    return toPlain(data)
+  })
+
+  ipcMain.handle('contratos:getById', async (event, id) => {
+    const data = await prisma.contratos.findUnique({
+      where: { ID_contrato: id },
+      include: {
+        unidad: { include: { edificio: true } },
+        inquilino: true,
+        firmante: true,
+        tipo_indice: true,
+        periodicidad: true,
+        estado_contrato: true,
+        garantes: { include: { garante: true } },
+        periodos_contrato: { orderBy: { Numero_Cuota: 'asc' } },
+      },
+    })
+    return toPlain(data)
+  })
+
+  ipcMain.handle('contratos:create', async (event, { data, garantesIds }) => {
+    return await prisma.contratos.create({
+      data: {
+        ...data,
+        garantes: garantesIds && garantesIds.length > 0
+          ? {
+              create: garantesIds.map((personaId) => ({
+                ID_garante_contrato: 'GC-' + Date.now() + '-' + personaId,
+                ID_persona_garante: personaId,
+              })),
+            }
+          : undefined,
+      },
+    })
+  })
+
+  ipcMain.handle('contratos:update', async (event, { id, data, garantesIds }) => {
+    // Reemplazamos los garantes existentes por la nueva lista
+    await prisma.garantes_contrato.deleteMany({ where: { ID_contrato: id } })
+
+    return await prisma.contratos.update({
+      where: { ID_contrato: id },
+      data: {
+        ...data,
+        garantes: garantesIds && garantesIds.length > 0
+          ? {
+              create: garantesIds.map((personaId) => ({
+                ID_garante_contrato: 'GC-' + Date.now() + '-' + personaId,
+                ID_persona_garante: personaId,
+              })),
+            }
+          : undefined,
+      },
+    })
+  })
+
+  ipcMain.handle('contratos:delete', async (event, id) => {
+    await prisma.garantes_contrato.deleteMany({ where: { ID_contrato: id } })
+    return await prisma.contratos.delete({ where: { ID_contrato: id } })
   })
 
   // ============================================================
@@ -111,5 +198,17 @@ export function registerHandlers() {
 
   ipcMain.handle('catalogos:estadosUnidad', async () => {
     return await prisma.estados_unidad.findMany()
+  })
+
+  ipcMain.handle('catalogos:estadosContrato', async () => {
+    return await prisma.estados_contrato.findMany()
+  })
+
+  ipcMain.handle('catalogos:tiposIndice', async () => {
+    return await prisma.tipos_indice.findMany()
+  })
+
+  ipcMain.handle('catalogos:periodicidades', async () => {
+    return await prisma.periodicidades.findMany()
   })
 }

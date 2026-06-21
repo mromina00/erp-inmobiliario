@@ -19,6 +19,13 @@ contextBridge.exposeInMainWorld('api', {
     update: (id, data) => ipcRenderer.invoke('unidades:update', { id, data }),
     delete: (id) => ipcRenderer.invoke('unidades:delete', id),
   },
+  contratos: {
+    getAll: () => ipcRenderer.invoke('contratos:getAll'),
+    getById: (id) => ipcRenderer.invoke('contratos:getById', id),
+    create: (data, garantesIds) => ipcRenderer.invoke('contratos:create', { data, garantesIds }),
+    update: (id, data, garantesIds) => ipcRenderer.invoke('contratos:update', { id, data, garantesIds }),
+    delete: (id) => ipcRenderer.invoke('contratos:delete', id),
+  },
   catalogos: {
     tiposDocumento: () => ipcRenderer.invoke('catalogos:tiposDocumento'),
     tiposPersona: () => ipcRenderer.invoke('catalogos:tiposPersona'),
@@ -27,5 +34,8 @@ contextBridge.exposeInMainWorld('api', {
     tiposUnidad: () => ipcRenderer.invoke('catalogos:tiposUnidad'),
     perfilesCobro: () => ipcRenderer.invoke('catalogos:perfilesCobro'),
     estadosUnidad: () => ipcRenderer.invoke('catalogos:estadosUnidad'),
+    estadosContrato: () => ipcRenderer.invoke('catalogos:estadosContrato'),
+    tiposIndice: () => ipcRenderer.invoke('catalogos:tiposIndice'),
+    periodicidades: () => ipcRenderer.invoke('catalogos:periodicidades'),
   },
 })

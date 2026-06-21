@@ -5,6 +5,7 @@ import Placeholder from './pages/Placeholder'
 import Personas from './pages/Personas'
 import Unidades from './pages/Unidades'
 import Edificios from './pages/Edificios'
+import Contratos from './pages/Contratos'
 import './App.css'
 
 function App() {
@@ -17,7 +18,7 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/unidades" element={<Unidades />} />
             <Route path="/edificios" element={<Edificios />} />
-            <Route path="/contratos" element={<Placeholder title="Contratos" />} />
+            <Route path="/contratos" element={<Contratos />} />
             <Route path="/cobros" element={<Placeholder title="Cobros de alquiler" />} />
             <Route path="/boletas" element={<Placeholder title="Boletas y tasas" />} />
             <Route path="/tarjetas" element={<Placeholder title="Tarjetas" />} />
