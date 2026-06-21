@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const emptyForm = {
   ID_unidad: '',
@@ -27,6 +28,7 @@ function fmtDate(d) {
 }
 
 function Contratos() {
+  const navigate = useNavigate()  
   const [contratos, setContratos] = useState([])
   const [unidades, setUnidades] = useState([])
   const [personas, setPersonas] = useState([])
@@ -104,8 +106,8 @@ function Contratos() {
       ID_persona_inquilino: form.ID_persona_inquilino,
       ID_persona_firmante: form.ID_persona_firmante || null,
       Duracion_anos: parseInt(form.Duracion_anos, 10),
-      Fecha_Inicio: form.Fecha_Inicio,
-      Fecha_Vencimiento: form.Fecha_Vencimiento,
+      Fecha_Inicio: form.Fecha_Inicio + 'T00:00:00.000Z',
+      Fecha_Vencimiento: form.Fecha_Vencimiento + 'T00:00:00.000Z',
       Monto_Alquiler_Inicial: parseFloat(form.Monto_Alquiler_Inicial),
       ID_tipo_indice: form.ID_tipo_indice || null,
       ID_periodicidad: form.ID_periodicidad || null,
@@ -308,6 +310,7 @@ function Contratos() {
                   <td>{fmtMoney(c.Monto_Alquiler_Inicial)}</td>
                   <td>{c.estado_contrato?.Descripcion}</td>
                   <td style={{ textAlign: 'right' }}>
+                    <button onClick={() => navigate(`/contratos/${c.ID_contrato}`)}>Ver períodos</button>{' '}
                     <button onClick={() => startEdit(c)}>Editar</button>{' '}
                     <button onClick={() => handleDelete(c.ID_contrato)}>Eliminar</button>
                   </td>

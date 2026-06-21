@@ -226,3 +226,8 @@ input::placeholder {
   background: #f0f0ee;
   color: #777;
 }
+
+.badge-danger {
+  background: #fbe5e3;
+  color: #c0392b;
+}

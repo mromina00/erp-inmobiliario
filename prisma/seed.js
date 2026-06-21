@@ -10,30 +10,34 @@ const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  await prisma.estados_contrato.createMany({
+  await prisma.estados_periodo.createMany({
     data: [
-      { ID_estado_contrato: 'VIGENTE', Descripcion: 'Vigente' },
-      { ID_estado_contrato: 'FINALIZADO', Descripcion: 'Finalizado' },
-      { ID_estado_contrato: 'RENOVADO', Descripcion: 'Renovado' },
+      { ID_estado_periodo: 'PENDIENTE', Descripcion: 'Pendiente' },
+      { ID_estado_periodo: 'PAGADO', Descripcion: 'Pagado' },
+      { ID_estado_periodo: 'EN_MORA', Descripcion: 'En mora' },
     ],
   })
 
-  await prisma.tipos_indice.createMany({
+  await prisma.imputaciones.createMany({
     data: [
-      { ID_indice: 'ICL', Descripcion: 'ICL' },
-      { ID_indice: 'IPC', Descripcion: 'IPC' },
-      { ID_indice: 'SIN_INDEXACION', Descripcion: 'Sin indexación' },
+      { ID_imputacion: 'ALQUILER', Descripcion: 'Alquiler' },
+      { ID_imputacion: 'SERVICIOS', Descripcion: 'Servicios' },
+      { ID_imputacion: 'GENERAL', Descripcion: 'General' },
     ],
   })
 
-  await prisma.periodicidades.createMany({
+  await prisma.tipos_cuenta.createMany({
     data: [
-      { ID_periodicidad: 'CUATRIMESTRAL', Descripcion: 'Cuatrimestral' },
-      { ID_periodicidad: 'SEMESTRAL', Descripcion: 'Semestral' },
+      { ID_tipo_cuenta: 'CAJA', Descripcion: 'Caja / Efectivo' },
+      { ID_tipo_cuenta: 'BANCO', Descripcion: 'Cuenta bancaria' },
     ],
   })
 
-  console.log('Catálogos de contratos cargados correctamente')
+  await prisma.monedas.createMany({
+    data: [{ ID_moneda: 'ARS', Descripcion: 'Peso argentino', Simbolo: '$' }],
+  })
+
+  console.log('Catálogos de períodos/cobros cargados correctamente')
 }
 
 main()

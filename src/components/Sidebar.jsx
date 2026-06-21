@@ -16,9 +16,10 @@ const sections = [
     title: 'Servicios',
     items: [{ label: 'Boletas y tasas', path: '/boletas', icon: '\u25A2' }],
   },
-  {
+{
     title: 'Finanzas',
     items: [
+      { label: 'Cuentas', path: '/cuentas', icon: '\u25A2' },
       { label: 'Tarjetas', path: '/tarjetas', icon: '\u25A2' },
       { label: 'Libro diario', path: '/libro-diario', icon: '\u25A2' },
       { label: 'IVA compras / ventas', path: '/iva', icon: '\u25A2' },

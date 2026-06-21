@@ -6,6 +6,8 @@ import Personas from './pages/Personas'
 import Unidades from './pages/Unidades'
 import Edificios from './pages/Edificios'
 import Contratos from './pages/Contratos'
+import Cuentas from './pages/Cuentas'
+import DetalleContrato from './pages/DetalleContrato'
 import './App.css'
 
 function App() {
@@ -26,6 +28,8 @@ function App() {
             <Route path="/iva" element={<Placeholder title="IVA compras / ventas" />} />
             <Route path="/personas" element={<Personas />} />
             <Route path="/vencimientos" element={<Placeholder title="Vencimientos" />} />
+            <Route path="/cuentas" element={<Cuentas />} />
+            <Route path="/contratos/:id" element={<DetalleContrato />} />
           </Routes>
         </div>
       </div>

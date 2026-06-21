@@ -26,6 +26,20 @@ contextBridge.exposeInMainWorld('api', {
     update: (id, data, garantesIds) => ipcRenderer.invoke('contratos:update', { id, data, garantesIds }),
     delete: (id) => ipcRenderer.invoke('contratos:delete', id),
   },
+  periodos: {
+    getByContrato: (contratoId) => ipcRenderer.invoke('periodos:getByContrato', contratoId),
+    update: (id, data) => ipcRenderer.invoke('periodos:update', { id, data }),
+  },
+  cuentas: {
+    getAll: () => ipcRenderer.invoke('cuentas:getAll'),
+    create: (data) => ipcRenderer.invoke('cuentas:create', data),
+    update: (id, data) => ipcRenderer.invoke('cuentas:update', { id, data }),
+    delete: (id) => ipcRenderer.invoke('cuentas:delete', id),
+  },
+  cobros: {
+    create: (data) => ipcRenderer.invoke('cobros:create', data),
+    delete: (id, periodoId) => ipcRenderer.invoke('cobros:delete', { id, periodoId }),
+  },
   catalogos: {
     tiposDocumento: () => ipcRenderer.invoke('catalogos:tiposDocumento'),
     tiposPersona: () => ipcRenderer.invoke('catalogos:tiposPersona'),
@@ -37,5 +51,8 @@ contextBridge.exposeInMainWorld('api', {
     estadosContrato: () => ipcRenderer.invoke('catalogos:estadosContrato'),
     tiposIndice: () => ipcRenderer.invoke('catalogos:tiposIndice'),
     periodicidades: () => ipcRenderer.invoke('catalogos:periodicidades'),
+    imputaciones: () => ipcRenderer.invoke('catalogos:imputaciones'),
+    tiposCuenta: () => ipcRenderer.invoke('catalogos:tiposCuenta'),
+    monedas: () => ipcRenderer.invoke('catalogos:monedas'),
   },
 })

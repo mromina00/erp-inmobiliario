@@ -10,12 +10,42 @@ function toPlain(obj) {
   }))
 }
 
+function generarPeriodos(contrato) {
+  const periodos = []
+  const inicio = new Date(contrato.Fecha_Inicio)
+  const fin = new Date(contrato.Fecha_Vencimiento)
+  let cursor = new Date(inicio.getFullYear(), inicio.getMonth(), 1)
+  let numeroCuota = 1
+
+  while (cursor <= fin) {
+    const mesAno = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`
+    periodos.push({
+      ID_periodo_contrato: `PC-${contrato.ID_contrato}-${numeroCuota}`,
+      ID_contrato: contrato.ID_contrato,
+      Numero_Cuota: numeroCuota,
+      Mes_Ano: mesAno,
+      Monto_Alquiler: contrato.Monto_Alquiler_Inicial,
+      Monto_Expensas: contrato.Monto_Expensas_Inicial || 0,
+      Monto_Cochera: contrato.Monto_Cochera_Inicial || 0,
+      Monto_Municipalidad: 0,
+      Monto_Otros: 0,
+      Porcentaje_Recargo: 0,
+      Monto_Recargo: 0,
+      ID_estado_periodo: 'PENDIENTE',
+    })
+    numeroCuota++
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1)
+  }
+
+  return periodos
+}
+
 export function registerHandlers() {
   // ============================================================
   // PERSONAS
   // ============================================================
   ipcMain.handle('personas:getAll', async () => {
-    return await prisma.personas.findMany({
+    const data = await prisma.personas.findMany({
       include: {
         tipo_doc: true,
         tipo_persona: true,
@@ -24,46 +54,44 @@ export function registerHandlers() {
       },
       orderBy: { Nombre: 'asc' },
     })
+    return toPlain(data)
   })
 
   ipcMain.handle('personas:create', async (event, data) => {
-    return await prisma.personas.create({ data })
+    return toPlain(await prisma.personas.create({ data }))
   })
 
   ipcMain.handle('personas:update', async (event, { id, data }) => {
-    return await prisma.personas.update({
-      where: { ID_persona: id },
-      data,
-    })
+    return toPlain(await prisma.personas.update({ where: { ID_persona: id }, data }))
   })
 
   ipcMain.handle('personas:delete', async (event, id) => {
-    return await prisma.personas.delete({ where: { ID_persona: id } })
+    return toPlain(await prisma.personas.delete({ where: { ID_persona: id } }))
   })
 
   // ============================================================
   // EDIFICIOS
   // ============================================================
   ipcMain.handle('edificios:getAll', async () => {
-    return await prisma.edificios.findMany({ orderBy: { Nombre: 'asc' } })
+    return toPlain(await prisma.edificios.findMany({ orderBy: { Nombre: 'asc' } }))
   })
 
   ipcMain.handle('edificios:create', async (event, data) => {
-    return await prisma.edificios.create({ data })
+    return toPlain(await prisma.edificios.create({ data }))
   })
 
   ipcMain.handle('edificios:update', async (event, { id, data }) => {
-    return await prisma.edificios.update({ where: { ID_edificio: id }, data })
+    return toPlain(await prisma.edificios.update({ where: { ID_edificio: id }, data }))
   })
 
   ipcMain.handle('edificios:delete', async (event, id) => {
-    return await prisma.edificios.delete({ where: { ID_edificio: id } })
+    return toPlain(await prisma.edificios.delete({ where: { ID_edificio: id } }))
   })
 
   // ============================================================
   // UNIDADES
   // ============================================================
-ipcMain.handle('unidades:getAll', async () => {
+  ipcMain.handle('unidades:getAll', async () => {
     const data = await prisma.unidades.findMany({
       include: {
         tipo: true,
@@ -81,21 +109,21 @@ ipcMain.handle('unidades:getAll', async () => {
   })
 
   ipcMain.handle('unidades:create', async (event, data) => {
-    return await prisma.unidades.create({ data })
+    return toPlain(await prisma.unidades.create({ data }))
   })
 
   ipcMain.handle('unidades:update', async (event, { id, data }) => {
-    return await prisma.unidades.update({ where: { ID_unidad: id }, data })
+    return toPlain(await prisma.unidades.update({ where: { ID_unidad: id }, data }))
   })
 
   ipcMain.handle('unidades:delete', async (event, id) => {
-    return await prisma.unidades.delete({ where: { ID_unidad: id } })
+    return toPlain(await prisma.unidades.delete({ where: { ID_unidad: id } }))
   })
 
   // ============================================================
   // CONTRATOS
   // ============================================================
-ipcMain.handle('contratos:getAll', async () => {
+  ipcMain.handle('contratos:getAll', async () => {
     const data = await prisma.contratos.findMany({
       include: {
         unidad: { include: { edificio: true } },
@@ -129,7 +157,7 @@ ipcMain.handle('contratos:getAll', async () => {
   })
 
   ipcMain.handle('contratos:create', async (event, { data, garantesIds }) => {
-    return await prisma.contratos.create({
+    const contrato = await prisma.contratos.create({
       data: {
         ...data,
         garantes: garantesIds && garantesIds.length > 0
@@ -142,13 +170,20 @@ ipcMain.handle('contratos:getAll', async () => {
           : undefined,
       },
     })
+
+    // Generar automáticamente los períodos mensuales del contrato
+    const periodos = generarPeriodos(contrato)
+    if (periodos.length > 0) {
+      await prisma.periodos_contrato.createMany({ data: periodos })
+    }
+
+    return toPlain(contrato)
   })
 
   ipcMain.handle('contratos:update', async (event, { id, data, garantesIds }) => {
-    // Reemplazamos los garantes existentes por la nueva lista
     await prisma.garantes_contrato.deleteMany({ where: { ID_contrato: id } })
 
-    return await prisma.contratos.update({
+    const contrato = await prisma.contratos.update({
       where: { ID_contrato: id },
       data: {
         ...data,
@@ -162,53 +197,100 @@ ipcMain.handle('contratos:getAll', async () => {
           : undefined,
       },
     })
+
+    return toPlain(contrato)
   })
 
   ipcMain.handle('contratos:delete', async (event, id) => {
     await prisma.garantes_contrato.deleteMany({ where: { ID_contrato: id } })
-    return await prisma.contratos.delete({ where: { ID_contrato: id } })
+    await prisma.periodos_contrato.deleteMany({ where: { ID_contrato: id } })
+    return toPlain(await prisma.contratos.delete({ where: { ID_contrato: id } }))
+  })
+
+  // ============================================================
+  // PERIODOS DE CONTRATO
+  // ============================================================
+  ipcMain.handle('periodos:getByContrato', async (event, contratoId) => {
+    const data = await prisma.periodos_contrato.findMany({
+      where: { ID_contrato: contratoId },
+      include: { estado_periodo: true, cobros_alquiler: true },
+      orderBy: { Numero_Cuota: 'asc' },
+    })
+    return toPlain(data)
+  })
+
+  ipcMain.handle('periodos:update', async (event, { id, data }) => {
+    return toPlain(await prisma.periodos_contrato.update({
+      where: { ID_periodo_contrato: id },
+      data,
+    }))
+  })
+
+  // ============================================================
+  // CUENTAS
+  // ============================================================
+  ipcMain.handle('cuentas:getAll', async () => {
+    const data = await prisma.cuentas.findMany({
+      include: { tipo_cuenta: true, moneda: true, titular: true },
+      orderBy: { Nombre_Cuenta: 'asc' },
+    })
+    return toPlain(data)
+  })
+
+  ipcMain.handle('cuentas:create', async (event, data) => {
+    return toPlain(await prisma.cuentas.create({ data }))
+  })
+
+  ipcMain.handle('cuentas:update', async (event, { id, data }) => {
+    return toPlain(await prisma.cuentas.update({ where: { ID_cuenta: id }, data }))
+  })
+
+  ipcMain.handle('cuentas:delete', async (event, id) => {
+    return toPlain(await prisma.cuentas.delete({ where: { ID_cuenta: id } }))
+  })
+
+  // ============================================================
+  // COBROS DE ALQUILER
+  // ============================================================
+  ipcMain.handle('cobros:create', async (event, data) => {
+    const cobro = await prisma.cobros_alquiler.create({ data })
+
+    // Marcar el período como Pagado
+    if (data.ID_periodo_contrato) {
+      await prisma.periodos_contrato.update({
+        where: { ID_periodo_contrato: data.ID_periodo_contrato },
+        data: { ID_estado_periodo: 'PAGADO' },
+      })
+    }
+
+    return toPlain(cobro)
+  })
+
+  ipcMain.handle('cobros:delete', async (event, { id, periodoId }) => {
+    await prisma.cobros_alquiler.delete({ where: { ID_cobro: id } })
+    if (periodoId) {
+      await prisma.periodos_contrato.update({
+        where: { ID_periodo_contrato: periodoId },
+        data: { ID_estado_periodo: 'PENDIENTE' },
+      })
+    }
+    return { ok: true }
   })
 
   // ============================================================
   // CATÁLOGOS
   // ============================================================
-  ipcMain.handle('catalogos:tiposDocumento', async () => {
-    return await prisma.tipos_documento.findMany()
-  })
-
-  ipcMain.handle('catalogos:tiposPersona', async () => {
-    return await prisma.tipos_persona.findMany()
-  })
-
-  ipcMain.handle('catalogos:rolesPersona', async () => {
-    return await prisma.roles_persona.findMany()
-  })
-
-  ipcMain.handle('catalogos:estadosPersona', async () => {
-    return await prisma.estados_persona.findMany()
-  })
-
-  ipcMain.handle('catalogos:tiposUnidad', async () => {
-    return await prisma.tipos_unidad.findMany()
-  })
-
-  ipcMain.handle('catalogos:perfilesCobro', async () => {
-    return await prisma.perfiles_cobro.findMany()
-  })
-
-  ipcMain.handle('catalogos:estadosUnidad', async () => {
-    return await prisma.estados_unidad.findMany()
-  })
-
-  ipcMain.handle('catalogos:estadosContrato', async () => {
-    return await prisma.estados_contrato.findMany()
-  })
-
-  ipcMain.handle('catalogos:tiposIndice', async () => {
-    return await prisma.tipos_indice.findMany()
-  })
-
-  ipcMain.handle('catalogos:periodicidades', async () => {
-    return await prisma.periodicidades.findMany()
-  })
+  ipcMain.handle('catalogos:tiposDocumento', async () => toPlain(await prisma.tipos_documento.findMany()))
+  ipcMain.handle('catalogos:tiposPersona', async () => toPlain(await prisma.tipos_persona.findMany()))
+  ipcMain.handle('catalogos:rolesPersona', async () => toPlain(await prisma.roles_persona.findMany()))
+  ipcMain.handle('catalogos:estadosPersona', async () => toPlain(await prisma.estados_persona.findMany()))
+  ipcMain.handle('catalogos:tiposUnidad', async () => toPlain(await prisma.tipos_unidad.findMany()))
+  ipcMain.handle('catalogos:perfilesCobro', async () => toPlain(await prisma.perfiles_cobro.findMany()))
+  ipcMain.handle('catalogos:estadosUnidad', async () => toPlain(await prisma.estados_unidad.findMany()))
+  ipcMain.handle('catalogos:estadosContrato', async () => toPlain(await prisma.estados_contrato.findMany()))
+  ipcMain.handle('catalogos:tiposIndice', async () => toPlain(await prisma.tipos_indice.findMany()))
+  ipcMain.handle('catalogos:periodicidades', async () => toPlain(await prisma.periodicidades.findMany()))
+  ipcMain.handle('catalogos:imputaciones', async () => toPlain(await prisma.imputaciones.findMany()))
+  ipcMain.handle('catalogos:tiposCuenta', async () => toPlain(await prisma.tipos_cuenta.findMany()))
+  ipcMain.handle('catalogos:monedas', async () => toPlain(await prisma.monedas.findMany()))
 }
