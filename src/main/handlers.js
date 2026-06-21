@@ -252,16 +252,33 @@ export function registerHandlers() {
   // ============================================================
   // COBROS DE ALQUILER
   // ============================================================
-  ipcMain.handle('cobros:create', async (event, data) => {
+ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, ...data }) => {
     const cobro = await prisma.cobros_alquiler.create({ data })
 
-    // Marcar el período como Pagado
     if (data.ID_periodo_contrato) {
       await prisma.periodos_contrato.update({
         where: { ID_periodo_contrato: data.ID_periodo_contrato },
         data: { ID_estado_periodo: 'PAGADO' },
       })
     }
+
+    // Generar movimiento en el libro diario automáticamente
+    await prisma.libro_diario.create({
+      data: {
+        ID_movimiento: 'LD-' + Date.now(),
+        Fecha: data.Fecha_Pago,
+        ID_cuenta: data.ID_cuenta_destino,
+        ID_persona_entidad: personaId,
+        ID_unidad: unidadId || null,
+        Detalle: `Cobro de alquiler - ${data.ID_cobro}`,
+        Monto: data.Monto_Pagado,
+        ID_medio_pago: medioPago,
+        ID_subcategoria_flujo: data.Imputacion_Pago === 'ALQUILER' ? 'ALQUILER' : 'OTROS_INGRESOS',
+        Modulo_Origen: 'ALQUILERES',
+        ID_referencia_origen: cobro.ID_cobro,
+        Conciliado: false,
+      },
+    })
 
     return toPlain(cobro)
   })
@@ -293,4 +310,5 @@ export function registerHandlers() {
   ipcMain.handle('catalogos:imputaciones', async () => toPlain(await prisma.imputaciones.findMany()))
   ipcMain.handle('catalogos:tiposCuenta', async () => toPlain(await prisma.tipos_cuenta.findMany()))
   ipcMain.handle('catalogos:monedas', async () => toPlain(await prisma.monedas.findMany()))
+  ipcMain.handle('catalogos:mediosPago', async () => toPlain(await prisma.medios_pago.findMany()))
 }

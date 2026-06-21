@@ -54,5 +54,6 @@ contextBridge.exposeInMainWorld('api', {
     imputaciones: () => ipcRenderer.invoke('catalogos:imputaciones'),
     tiposCuenta: () => ipcRenderer.invoke('catalogos:tiposCuenta'),
     monedas: () => ipcRenderer.invoke('catalogos:monedas'),
+    mediosPago: () => ipcRenderer.invoke('catalogos:mediosPago'),
   },
 })

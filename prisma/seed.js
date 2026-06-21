@@ -10,34 +10,22 @@ const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  await prisma.estados_periodo.createMany({
+  await prisma.medios_pago.createMany({
     data: [
-      { ID_estado_periodo: 'PENDIENTE', Descripcion: 'Pendiente' },
-      { ID_estado_periodo: 'PAGADO', Descripcion: 'Pagado' },
-      { ID_estado_periodo: 'EN_MORA', Descripcion: 'En mora' },
+      { ID_medio: 'EFECTIVO', Descripcion: 'Efectivo' },
+      { ID_medio: 'TRANSFERENCIA_DEBITO', Descripcion: 'Transferencia o Débito' },
     ],
   })
 
-  await prisma.imputaciones.createMany({
+  await prisma.subcategorias_flujo.createMany({
     data: [
-      { ID_imputacion: 'ALQUILER', Descripcion: 'Alquiler' },
-      { ID_imputacion: 'SERVICIOS', Descripcion: 'Servicios' },
-      { ID_imputacion: 'GENERAL', Descripcion: 'General' },
+      { ID_subcat: 'ALQUILER', Tipo_Movimiento: 'INGRESO', Categoria_Padre: 'ALQUILERES', Descripcion: 'Alquiler' },
+      { ID_subcat: 'EXPENSAS', Tipo_Movimiento: 'INGRESO', Categoria_Padre: 'ALQUILERES', Descripcion: 'Expensas' },
+      { ID_subcat: 'OTROS_INGRESOS', Tipo_Movimiento: 'INGRESO', Categoria_Padre: 'GENERAL', Descripcion: 'Otros ingresos' },
     ],
   })
 
-  await prisma.tipos_cuenta.createMany({
-    data: [
-      { ID_tipo_cuenta: 'CAJA', Descripcion: 'Caja / Efectivo' },
-      { ID_tipo_cuenta: 'BANCO', Descripcion: 'Cuenta bancaria' },
-    ],
-  })
-
-  await prisma.monedas.createMany({
-    data: [{ ID_moneda: 'ARS', Descripcion: 'Peso argentino', Simbolo: '$' }],
-  })
-
-  console.log('Catálogos de períodos/cobros cargados correctamente')
+  console.log('Catálogos de libro diario cargados correctamente')
 }
 
 main()

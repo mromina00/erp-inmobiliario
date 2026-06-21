@@ -19,22 +19,25 @@ function DetalleContrato() {
   const [periodos, setPeriodos] = useState([])
   const [cuentas, setCuentas] = useState([])
   const [imputaciones, setImputaciones] = useState([])
+  const [mediosPago, setMediosPago] = useState([])
   const [editandoPeriodo, setEditandoPeriodo] = useState(null)
   const [montoEdit, setMontoEdit] = useState({ Monto_Alquiler: '', Monto_Expensas: '', Monto_Cochera: '' })
   const [cobrando, setCobrando] = useState(null)
-  const [cobroForm, setCobroForm] = useState({ Monto_Pagado: '', ID_cuenta_destino: '', Imputacion_Pago: '', Fecha_Pago: '' })
+  const [cobroForm, setCobroForm] = useState({ Monto_Pagado: '', ID_cuenta_destino: '', Imputacion_Pago: '', Fecha_Pago: '', ID_medio_pago: '' })
 
   async function loadAll() {
-    const [c, p, cu, imp] = await Promise.all([
+    const [c, p, cu, imp, mp] = await Promise.all([
       window.api.contratos.getById(id),
       window.api.periodos.getByContrato(id),
       window.api.cuentas.getAll(),
       window.api.catalogos.imputaciones(),
+      window.api.catalogos.mediosPago(),
     ])
     setContrato(c)
     setPeriodos(p)
     setCuentas(cu)
     setImputaciones(imp)
+    setMediosPago(mp)
   }
 
   useEffect(() => {
@@ -73,6 +76,7 @@ function DetalleContrato() {
       ID_cuenta_destino: '',
       Imputacion_Pago: 'ALQUILER',
       Fecha_Pago: new Date().toISOString().substring(0, 10),
+      ID_medio_pago: '',
     })
     setCobrando(periodo.ID_periodo_contrato)
   }
@@ -82,13 +86,20 @@ function DetalleContrato() {
       alert('Elegí una cuenta destino')
       return
     }
+    if (!cobroForm.ID_medio_pago) {
+      alert('Elegí un medio de pago')
+      return
+    }
     await window.api.cobros.create({
       ID_cobro: 'COB-' + Date.now(),
       ID_periodo_contrato: periodoId,
-      Fecha_Pago: cobroForm.Fecha_Pago,
+      Fecha_Pago: cobroForm.Fecha_Pago + 'T00:00:00.000Z',
       Monto_Pagado: parseFloat(cobroForm.Monto_Pagado),
       Imputacion_Pago: cobroForm.Imputacion_Pago,
       ID_cuenta_destino: cobroForm.ID_cuenta_destino,
+      medioPago: cobroForm.ID_medio_pago,
+      personaId: contrato.ID_persona_inquilino,
+      unidadId: contrato.ID_unidad,
     })
     setCobrando(null)
     loadAll()
@@ -191,8 +202,8 @@ function DetalleContrato() {
                 {cobrando === p.ID_periodo_contrato && (
                   <tr>
                     <td colSpan={6}>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', padding: '8px 0' }}>
-                        <label>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', padding: '8px 0', flexWrap: 'wrap' }}>
+                        <label style={{ minWidth: '110px' }}>
                           Monto pagado
                           <input
                             type="number"
@@ -201,7 +212,7 @@ function DetalleContrato() {
                             onChange={(e) => setCobroForm({ ...cobroForm, Monto_Pagado: e.target.value })}
                           />
                         </label>
-                        <label>
+                        <label style={{ minWidth: '130px' }}>
                           Fecha de pago
                           <input
                             type="date"
@@ -209,7 +220,7 @@ function DetalleContrato() {
                             onChange={(e) => setCobroForm({ ...cobroForm, Fecha_Pago: e.target.value })}
                           />
                         </label>
-                        <label>
+                        <label style={{ minWidth: '140px' }}>
                           Cuenta destino
                           <select
                             value={cobroForm.ID_cuenta_destino}
@@ -221,7 +232,7 @@ function DetalleContrato() {
                             ))}
                           </select>
                         </label>
-                        <label>
+                        <label style={{ minWidth: '120px' }}>
                           Imputación
                           <select
                             value={cobroForm.Imputacion_Pago}
@@ -229,6 +240,18 @@ function DetalleContrato() {
                           >
                             {imputaciones.map((i) => (
                               <option key={i.ID_imputacion} value={i.ID_imputacion}>{i.Descripcion}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <label style={{ minWidth: '140px' }}>
+                          Medio de pago
+                          <select
+                            value={cobroForm.ID_medio_pago}
+                            onChange={(e) => setCobroForm({ ...cobroForm, ID_medio_pago: e.target.value })}
+                          >
+                            <option value="">Seleccionar...</option>
+                            {mediosPago.map((m) => (
+                              <option key={m.ID_medio} value={m.ID_medio}>{m.Descripcion}</option>
                             ))}
                           </select>
                         </label>
