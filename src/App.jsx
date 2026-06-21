@@ -8,6 +8,7 @@ import Edificios from './pages/Edificios'
 import Contratos from './pages/Contratos'
 import Cuentas from './pages/Cuentas'
 import DetalleContrato from './pages/DetalleContrato'
+import LibroDiario from './pages/LibroDiario'
 import './App.css'
 
 function App() {
@@ -24,7 +25,7 @@ function App() {
             <Route path="/cobros" element={<Placeholder title="Cobros de alquiler" />} />
             <Route path="/boletas" element={<Placeholder title="Boletas y tasas" />} />
             <Route path="/tarjetas" element={<Placeholder title="Tarjetas" />} />
-            <Route path="/libro-diario" element={<Placeholder title="Libro diario" />} />
+            <Route path="/libro-diario" element={<LibroDiario />} />
             <Route path="/iva" element={<Placeholder title="IVA compras / ventas" />} />
             <Route path="/personas" element={<Personas />} />
             <Route path="/vencimientos" element={<Placeholder title="Vencimientos" />} />

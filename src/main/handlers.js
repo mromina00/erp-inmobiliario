@@ -249,6 +249,23 @@ export function registerHandlers() {
     return toPlain(await prisma.cuentas.delete({ where: { ID_cuenta: id } }))
   })
 
+// ============================================================
+  // LIBRO DIARIO
+  // ============================================================
+  ipcMain.handle('libroDiario:getAll', async () => {
+    const data = await prisma.libro_diario.findMany({
+      include: {
+        cuenta: true,
+        persona_entidad: true,
+        unidad: true,
+        medio_pago: true,
+        subcategoria: true,
+      },
+      orderBy: { Fecha: 'desc' },
+    })
+    return toPlain(data)
+  })
+
   // ============================================================
   // COBROS DE ALQUILER
   // ============================================================

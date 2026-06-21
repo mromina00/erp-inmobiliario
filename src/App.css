@@ -63,8 +63,17 @@ body {
 
 .content {
   flex: 1;
-  padding: 1.5rem 2rem;
+  padding: 1.5rem 2.5rem;
   overflow-y: auto;
+  min-width: 0;
+}
+
+.data-table {
+  table-layout: auto;
+}
+
+.data-table th, .data-table td {
+  white-space: nowrap;
 }
 
 .content h1 {
