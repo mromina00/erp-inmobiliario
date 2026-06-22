@@ -43,6 +43,23 @@ contextBridge.exposeInMainWorld('api', {
     create: (data) => ipcRenderer.invoke('cobros:create', data),
     delete: (id, periodoId) => ipcRenderer.invoke('cobros:delete', { id, periodoId }),
   },
+  tarjetas: {
+    getAll: () => ipcRenderer.invoke('tarjetas:getAll'),
+    create: (data) => ipcRenderer.invoke('tarjetas:create', data),
+    update: (id, data) => ipcRenderer.invoke('tarjetas:update', { id, data }),
+    delete: (id) => ipcRenderer.invoke('tarjetas:delete', id),
+  },
+  gastos: {
+    getByTarjeta: (tarjetaId) => ipcRenderer.invoke('gastos:getByTarjeta', tarjetaId),
+    create: (data, cuotasMonto) => ipcRenderer.invoke('gastos:create', { data, cuotasMonto }),
+    delete: (id) => ipcRenderer.invoke('gastos:delete', id),
+  },
+  resumenes: {
+    getByTarjeta: (tarjetaId) => ipcRenderer.invoke('resumenes:getByTarjeta', tarjetaId),
+    create: (data) => ipcRenderer.invoke('resumenes:create', data),
+    pagar: (id, cuentaId, fecha, monto, medio) => ipcRenderer.invoke('resumenes:pagar', { id, cuentaId, fecha, monto, medio }),
+    delete: (id) => ipcRenderer.invoke('resumenes:delete', id),
+  },
   servicios: {
     getAll: () => ipcRenderer.invoke('servicios:getAll'),
     create: (data) => ipcRenderer.invoke('servicios:create', data),
@@ -77,5 +94,7 @@ contextBridge.exposeInMainWorld('api', {
     tiposServicio: () => ipcRenderer.invoke('catalogos:tiposServicio'),
     estadosBoleta: () => ipcRenderer.invoke('catalogos:estadosBoleta'),
     responsablesPago: () => ipcRenderer.invoke('catalogos:responsablesPago'),
+    marcasTarjeta: () => ipcRenderer.invoke('catalogos:marcasTarjeta'),
+    estadosResumen: () => ipcRenderer.invoke('catalogos:estadosResumen'),
   },
 })

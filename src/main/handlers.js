@@ -312,6 +312,121 @@ ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, 
   })
 
   // ============================================================
+  // TARJETAS
+  // ============================================================
+  ipcMain.handle('tarjetas:getAll', async () => {
+    const data = await prisma.tarjetas.findMany({
+      include: {
+        marca_tarjeta: true,
+        persona_usuario: true,
+        tarjeta_principal: true,
+      },
+      orderBy: { Nombre_Comercial: 'asc' },
+    })
+    return toPlain(data)
+  })
+
+  ipcMain.handle('tarjetas:create', async (event, data) => {
+    return toPlain(await prisma.tarjetas.create({ data }))
+  })
+
+  ipcMain.handle('tarjetas:update', async (event, { id, data }) => {
+    return toPlain(await prisma.tarjetas.update({ where: { ID_tarjeta: id }, data }))
+  })
+
+  ipcMain.handle('tarjetas:delete', async (event, id) => {
+    return toPlain(await prisma.tarjetas.delete({ where: { ID_tarjeta: id } }))
+  })
+
+  // GASTOS
+  ipcMain.handle('gastos:getByTarjeta', async (event, tarjetaId) => {
+    const data = await prisma.tarjetas_gastos.findMany({
+      where: { ID_tarjeta: tarjetaId },
+      include: { cuotas: { include: { resumen_asociado: true } } },
+      orderBy: { Fecha_Compra: 'desc' },
+    })
+    return toPlain(data)
+  })
+
+  ipcMain.handle('gastos:create', async (event, { data, cuotasMonto }) => {
+    const gasto = await prisma.tarjetas_gastos.create({ data })
+
+    // Generar las cuotas del gasto
+    const cuotas = []
+    for (let i = 1; i <= data.Cuotas_Totales; i++) {
+      cuotas.push({
+        ID_cuota_resumen: `CUO-${gasto.ID_gasto}-${i}`,
+        ID_gasto: gasto.ID_gasto,
+        Numero_Cuota_Actual: i,
+        Monto_Cuota: cuotasMonto,
+        ID_resumen_asociado: null,
+      })
+    }
+    await prisma.tarjetas_cuotas_resumen.createMany({ data: cuotas })
+
+    return toPlain(gasto)
+  })
+
+  ipcMain.handle('gastos:delete', async (event, id) => {
+    await prisma.tarjetas_cuotas_resumen.deleteMany({ where: { ID_gasto: id } })
+    return toPlain(await prisma.tarjetas_gastos.delete({ where: { ID_gasto: id } }))
+  })
+
+  // RESÚMENES
+  ipcMain.handle('resumenes:getByTarjeta', async (event, tarjetaId) => {
+    const data = await prisma.resumenes_tarjeta.findMany({
+      where: { ID_tarjeta_titular: tarjetaId },
+      include: {
+        estado_resumen: true,
+        cuenta_pago: true,
+        cuotas: { include: { gasto: true } },
+      },
+      orderBy: { Fecha_Cierre: 'desc' },
+    })
+    return toPlain(data)
+  })
+
+  ipcMain.handle('resumenes:create', async (event, data) => {
+    return toPlain(await prisma.resumenes_tarjeta.create({ data }))
+  })
+
+  ipcMain.handle('resumenes:pagar', async (event, { id, cuentaId, fecha, monto, medio }) => {
+    const resumen = await prisma.resumenes_tarjeta.update({
+      where: { ID_resumen: id },
+      data: {
+        ID_estado_resumen: 'PAGADO',
+        Fecha_Pago: fecha,
+        Monto_Pagado_Real: monto,
+        ID_cuenta_pago: cuentaId,
+        Conciliado: true,
+      },
+      include: { tarjeta: { include: { persona_usuario: true } } },
+    })
+
+    await prisma.libro_diario.create({
+      data: {
+        ID_movimiento: 'LD-' + Date.now(),
+        Fecha: fecha,
+        ID_cuenta: cuentaId,
+        ID_persona_entidad: resumen.tarjeta?.persona_usuario?.ID_persona,
+        Detalle: `Pago resumen tarjeta - ${resumen.tarjeta?.Nombre_Comercial}`,
+        Monto: -Number(monto),
+        ID_medio_pago: medio,
+        ID_subcategoria_flujo: 'OTROS_INGRESOS',
+        Modulo_Origen: 'TARJETAS',
+        ID_referencia_origen: id,
+        Conciliado: false,
+      },
+    })
+
+    return toPlain(resumen)
+  })
+
+  ipcMain.handle('resumenes:delete', async (event, id) => {
+    return toPlain(await prisma.resumenes_tarjeta.delete({ where: { ID_resumen: id } }))
+  })
+
+  // ============================================================
   // SERVICIOS Y BOLETAS
   // ============================================================
   ipcMain.handle('servicios:getAll', async () => {
@@ -459,4 +574,6 @@ ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, 
   ipcMain.handle('catalogos:tiposServicio', async () => toPlain(await prisma.tipos_servicio.findMany()))
   ipcMain.handle('catalogos:estadosBoleta', async () => toPlain(await prisma.estados_boleta.findMany()))
   ipcMain.handle('catalogos:responsablesPago', async () => toPlain(await prisma.responsables_pago.findMany()))
+  ipcMain.handle('catalogos:marcasTarjeta', async () => toPlain(await prisma.marcas_tarjeta.findMany()))
+  ipcMain.handle('catalogos:estadosResumen', async () => toPlain(await prisma.estados_resumen.findMany()))
 }

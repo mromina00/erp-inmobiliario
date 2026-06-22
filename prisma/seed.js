@@ -10,33 +10,25 @@ const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  await prisma.tipos_servicio.createMany({
+  await prisma.marcas_tarjeta.createMany({
     data: [
-      { ID_tipo_serv: 'LUZ', Descripcion: 'Luz' },
-      { ID_tipo_serv: 'GAS', Descripcion: 'Gas' },
-      { ID_tipo_serv: 'AGUA', Descripcion: 'Agua' },
-      { ID_tipo_serv: 'MUNICIPALIDAD', Descripcion: 'Municipalidad' },
-      { ID_tipo_serv: 'INTERNET', Descripcion: 'Internet' },
-      { ID_tipo_serv: 'OTROS', Descripcion: 'Otros' },
+      { ID_marca: 'VISA', Descripcion: 'Visa' },
+      { ID_marca: 'MASTERCARD', Descripcion: 'Mastercard' },
+      { ID_marca: 'AMEX', Descripcion: 'American Express' },
+      { ID_marca: 'NARANJA', Descripcion: 'Naranja' },
+      { ID_marca: 'CABAL', Descripcion: 'Cabal' },
     ],
   })
 
-  await prisma.estados_boleta.createMany({
+  await prisma.estados_resumen.createMany({
     data: [
-      { ID_estado_boleta: 'PENDIENTE', Descripcion: 'Pendiente' },
-      { ID_estado_boleta: 'PAGADA', Descripcion: 'Pagada' },
-      { ID_estado_boleta: 'VENCIDA', Descripcion: 'Vencida' },
+      { ID_estado_resumen: 'PENDIENTE', Descripcion: 'Pendiente' },
+      { ID_estado_resumen: 'PAGADO', Descripcion: 'Pagado' },
+      { ID_estado_resumen: 'VENCIDO', Descripcion: 'Vencido' },
     ],
   })
 
-  await prisma.responsables_pago.createMany({
-    data: [
-      { ID_responsable: 'INQUILINO', Descripcion: 'Inquilino' },
-      { ID_responsable: 'PROPIETARIO', Descripcion: 'Propietario' },
-    ],
-  })
-
-  console.log('Catálogos de servicios cargados correctamente')
+  console.log('Catálogos de tarjetas cargados correctamente')
 }
 
 main()
