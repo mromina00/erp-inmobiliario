@@ -43,6 +43,19 @@ contextBridge.exposeInMainWorld('api', {
     create: (data) => ipcRenderer.invoke('cobros:create', data),
     delete: (id, periodoId) => ipcRenderer.invoke('cobros:delete', { id, periodoId }),
   },
+  servicios: {
+    getAll: () => ipcRenderer.invoke('servicios:getAll'),
+    create: (data) => ipcRenderer.invoke('servicios:create', data),
+    update: (id, data) => ipcRenderer.invoke('servicios:update', { id, data }),
+    delete: (id) => ipcRenderer.invoke('servicios:delete', id),
+  },
+  boletas: {
+    getByServicio: (servicioId) => ipcRenderer.invoke('boletas:getByServicio', servicioId),
+    create: (data) => ipcRenderer.invoke('boletas:create', data),
+    update: (id, data) => ipcRenderer.invoke('boletas:update', { id, data }),
+    delete: (id) => ipcRenderer.invoke('boletas:delete', id),
+    pagar: (id, cuentaId, fecha, medio, responsable) => ipcRenderer.invoke('boletas:pagar', { id, cuentaId, fecha, medio, responsable }),
+  },
   dashboard: {
     getMetrics: () => ipcRenderer.invoke('dashboard:getMetrics'),
   },
@@ -61,5 +74,8 @@ contextBridge.exposeInMainWorld('api', {
     tiposCuenta: () => ipcRenderer.invoke('catalogos:tiposCuenta'),
     monedas: () => ipcRenderer.invoke('catalogos:monedas'),
     mediosPago: () => ipcRenderer.invoke('catalogos:mediosPago'),
+    tiposServicio: () => ipcRenderer.invoke('catalogos:tiposServicio'),
+    estadosBoleta: () => ipcRenderer.invoke('catalogos:estadosBoleta'),
+    responsablesPago: () => ipcRenderer.invoke('catalogos:responsablesPago'),
   },
 })

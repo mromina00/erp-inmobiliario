@@ -312,6 +312,100 @@ ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, 
   })
 
   // ============================================================
+  // SERVICIOS Y BOLETAS
+  // ============================================================
+  ipcMain.handle('servicios:getAll', async () => {
+    const data = await prisma.servicios_propiedades.findMany({
+      include: {
+        unidad: { include: { edificio: true } },
+        tipo_servicio: true,
+        titular: true,
+      },
+      orderBy: { ID_servicio_prop: 'asc' },
+    })
+    return toPlain(data)
+  })
+
+  ipcMain.handle('servicios:create', async (event, data) => {
+    return toPlain(await prisma.servicios_propiedades.create({ data }))
+  })
+
+  ipcMain.handle('servicios:update', async (event, { id, data }) => {
+    return toPlain(await prisma.servicios_propiedades.update({
+      where: { ID_servicio_prop: id },
+      data,
+    }))
+  })
+
+  ipcMain.handle('servicios:delete', async (event, id) => {
+    return toPlain(await prisma.servicios_propiedades.delete({
+      where: { ID_servicio_prop: id },
+    }))
+  })
+
+  ipcMain.handle('boletas:getByServicio', async (event, servicioId) => {
+    const data = await prisma.boletas_servicios.findMany({
+      where: { ID_servicio_prop: servicioId },
+      include: { estado_boleta: true, responsable_pago: true, cuenta_pago: true },
+      orderBy: { Periodo: 'desc' },
+    })
+    return toPlain(data)
+  })
+
+  ipcMain.handle('boletas:create', async (event, data) => {
+    return toPlain(await prisma.boletas_servicios.create({ data }))
+  })
+
+  ipcMain.handle('boletas:update', async (event, { id, data }) => {
+    return toPlain(await prisma.boletas_servicios.update({
+      where: { ID_boleta: id },
+      data,
+    }))
+  })
+
+  ipcMain.handle('boletas:delete', async (event, id) => {
+    return toPlain(await prisma.boletas_servicios.delete({
+      where: { ID_boleta: id },
+    }))
+  })
+
+  ipcMain.handle('boletas:pagar', async (event, { id, cuentaId, fecha, medio, responsable }) => {
+    const updateData = {
+      ID_estado_boleta: 'PAGADA',
+      Fecha_Pago: fecha,
+    }
+
+    if (cuentaId) updateData.ID_cuenta_pago = cuentaId
+
+    const boleta = await prisma.boletas_servicios.update({
+      where: { ID_boleta: id },
+      data: updateData,
+      include: { servicio_prop: { include: { titular: true } } },
+    })
+
+    // Solo generamos movimiento en libro diario si paga el propietario
+    if (responsable === 'PROPIETARIO' && cuentaId && medio) {
+      await prisma.libro_diario.create({
+        data: {
+          ID_movimiento: 'LD-' + Date.now(),
+          Fecha: fecha,
+          ID_cuenta: cuentaId,
+          ID_persona_entidad: boleta.servicio_prop?.titular?.ID_persona || boleta.servicio_prop?.ID_persona_titular,
+          Detalle: `Pago boleta servicio - ${id}`,
+          Monto: -Number(boleta.Importe),
+          ID_medio_pago: medio,
+          ID_subcategoria_flujo: 'OTROS_INGRESOS',
+          Modulo_Origen: 'SERVICIOS',
+          ID_referencia_origen: id,
+          Conciliado: false,
+        },
+      })
+    }
+
+    return toPlain(boleta)
+  })
+
+  // ============================================================
   // DASHBOARD
   // ============================================================
   ipcMain.handle('dashboard:getMetrics', async () => {
@@ -362,4 +456,7 @@ ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, 
   ipcMain.handle('catalogos:tiposCuenta', async () => toPlain(await prisma.tipos_cuenta.findMany()))
   ipcMain.handle('catalogos:monedas', async () => toPlain(await prisma.monedas.findMany()))
   ipcMain.handle('catalogos:mediosPago', async () => toPlain(await prisma.medios_pago.findMany()))
+  ipcMain.handle('catalogos:tiposServicio', async () => toPlain(await prisma.tipos_servicio.findMany()))
+  ipcMain.handle('catalogos:estadosBoleta', async () => toPlain(await prisma.estados_boleta.findMany()))
+  ipcMain.handle('catalogos:responsablesPago', async () => toPlain(await prisma.responsables_pago.findMany()))
 }
