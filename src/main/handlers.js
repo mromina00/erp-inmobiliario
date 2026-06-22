@@ -312,6 +312,40 @@ ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, 
   })
 
   // ============================================================
+  // DASHBOARD
+  // ============================================================
+  ipcMain.handle('dashboard:getMetrics', async () => {
+    const now = new Date()
+    const mesActual = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+    const mesSiguiente = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`
+
+    const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1)
+    const finMes = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+
+    const [cobros, pendientes, vigentes] = await Promise.all([
+      prisma.cobros_alquiler.findMany({
+        where: {
+          Fecha_Pago: { gte: inicioMes.toISOString(), lte: finMes.toISOString() },
+        },
+      }),
+      prisma.periodos_contrato.count({
+        where: {
+          ID_estado_periodo: 'PENDIENTE',
+          Mes_Ano: { in: [mesActual, mesSiguiente] },
+        },
+      }),
+      prisma.contratos.count({
+        where: { ID_estado_contrato: 'VIGENTE' },
+      }),
+    ])
+
+    const totalCobros = cobros.reduce((acc, c) => acc + Number(c.Monto_Pagado), 0)
+
+    return toPlain({ totalCobros, pendientes, vigentes })
+  })
+
+  // ============================================================
   // CATÁLOGOS
   // ============================================================
   ipcMain.handle('catalogos:tiposDocumento', async () => toPlain(await prisma.tipos_documento.findMany()))

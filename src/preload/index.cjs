@@ -43,6 +43,9 @@ contextBridge.exposeInMainWorld('api', {
     create: (data) => ipcRenderer.invoke('cobros:create', data),
     delete: (id, periodoId) => ipcRenderer.invoke('cobros:delete', { id, periodoId }),
   },
+  dashboard: {
+    getMetrics: () => ipcRenderer.invoke('dashboard:getMetrics'),
+  },
   catalogos: {
     tiposDocumento: () => ipcRenderer.invoke('catalogos:tiposDocumento'),
     tiposPersona: () => ipcRenderer.invoke('catalogos:tiposPersona'),
