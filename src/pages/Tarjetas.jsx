@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import AccionesMenu from '../components/AccionesMenu'
+import SelectorPersona from '../components/SelectorPersona'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -478,15 +479,15 @@ function Tarjetas() {
                 ))}
               </select>
             </label>
-            <label>
-              Usuario / Titular
-              <select value={formTarjeta.ID_persona_usuario} onChange={(e) => setFormTarjeta({ ...formTarjeta, ID_persona_usuario: e.target.value })} required>
-                <option value="">Seleccionar...</option>
-                {personas.map((p) => (
-                  <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>
-                ))}
-              </select>
-            </label>
+            <SelectorPersona
+              label="Usuario / Titular"
+              value={formTarjeta.ID_persona_usuario}
+              onChange={(v) => setFormTarjeta({ ...formTarjeta, ID_persona_usuario: v })}
+              personas={personas}
+              onPersonaCreada={loadTarjetas}
+              contexto="titular"
+              required
+            />
             <label>
               Banco / Institución
               <input value={formTarjeta.Banco_Institucion} onChange={(e) => setFormTarjeta({ ...formTarjeta, Banco_Institucion: e.target.value })} />

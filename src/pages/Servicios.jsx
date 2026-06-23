@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import SelectorPersona from '../components/SelectorPersona'
 
 const emptyServicio = {
   ID_unidad: "",
@@ -576,22 +577,15 @@ function Servicios() {
                 onChange={handleChangeServicio}
               />
             </label>
-            <label>
-              Titular
-              <select
-                name="ID_persona_titular"
-                value={formServicio.ID_persona_titular}
-                onChange={handleChangeServicio}
-                required
-              >
-                <option value="">Seleccionar...</option>
-                {personas.map((p) => (
-                  <option key={p.ID_persona} value={p.ID_persona}>
-                    {p.Nombre}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <SelectorPersona
+              label="Titular"
+              value={formServicio.ID_persona_titular}
+              onChange={(v) => setFormServicio({ ...formServicio, ID_persona_titular: v })}
+              personas={personas}
+              onPersonaCreada={loadServicios}
+              contexto="titular"
+              required
+            />
           </div>
           <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
             <button type="submit">

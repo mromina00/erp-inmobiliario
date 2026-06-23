@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import SelectorPersona from '../components/SelectorPersona'
 
 const emptyForm = {
   Nombre_Cuenta: '',
@@ -119,15 +120,15 @@ function Cuentas() {
                 ))}
               </select>
             </label>
-            <label>
-              Titular
-              <select name="ID_persona_titular" value={form.ID_persona_titular} onChange={handleChange} required>
-                <option value="">Seleccionar...</option>
-                {personas.map((p) => (
-                  <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>
-                ))}
-              </select>
-            </label>
+            <SelectorPersona
+              label="Titular"
+              value={form.ID_persona_titular}
+              onChange={(v) => setForm({ ...form, ID_persona_titular: v })}
+              personas={personas}
+              onPersonaCreada={loadAll}
+              contexto="titular"
+              required
+            />
             <label>
               Banco / Institución
               <input name="Banco_Institucion" value={form.Banco_Institucion} onChange={handleChange} />
