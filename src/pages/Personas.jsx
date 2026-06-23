@@ -12,8 +12,22 @@ const emptyForm = {
   Provincia: '',
   Telefono: '',
   Email: '',
-  ID_estado_persona: '',
+  ID_estado_persona: 'ACTIVO',
   Notas: '',
+}
+
+function formatDocumento(value, tipo) {
+  const digits = value.replace(/\D/g, '')
+  if (tipo === 'CUIT') {
+    if (digits.length <= 2) return digits
+    if (digits.length <= 10) return `${digits.slice(0, 2)}-${digits.slice(2)}`
+    return `${digits.slice(0, 2)}-${digits.slice(2, 10)}-${digits.slice(10, 11)}`
+  } else if (tipo === 'DNI') {
+    if (digits.length <= 2) return digits
+    if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`
+    return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}`
+  }
+  return value
 }
 
 function Personas() {
@@ -41,12 +55,17 @@ function Personas() {
     setEstados(e)
   }
 
-  useEffect(() => {
-    loadAll()
-  }, [])
+  useEffect(() => { loadAll() }, [])
 
   function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    if (name === 'Documento') {
+      setForm({ ...form, Documento: formatDocumento(value, form.ID_tipo_doc) })
+    } else if (name === 'ID_tipo_doc') {
+      setForm({ ...form, ID_tipo_doc: value, Documento: '' })
+    } else {
+      setForm({ ...form, [name]: value })
+    }
   }
 
   function startCreate() {
@@ -68,7 +87,7 @@ function Personas() {
       Provincia: persona.Provincia || '',
       Telefono: persona.Telefono || '',
       Email: persona.Email || '',
-      ID_estado_persona: persona.ID_estado_persona || '',
+      ID_estado_persona: persona.ID_estado_persona || 'ACTIVO',
       Notas: persona.Notas || '',
     })
     setEditingId(persona.ID_persona)
@@ -79,6 +98,10 @@ function Personas() {
     e.preventDefault()
     const data = { ...form }
     delete data.ID_persona
+    // Si no es inquilino, forzamos ACTIVO
+    if (form.ID_rol_persona !== 'INQUILINO') {
+      data.ID_estado_persona = 'ACTIVO'
+    }
 
     if (editingId) {
       await window.api.personas.update(editingId, data)
@@ -86,7 +109,6 @@ function Personas() {
       const id = 'P-' + Date.now()
       await window.api.personas.create({ ID_persona: id, ...data })
     }
-
     setShowForm(false)
     setForm(emptyForm)
     setEditingId(null)
@@ -98,6 +120,8 @@ function Personas() {
     await window.api.personas.delete(id)
     loadAll()
   }
+
+  const esInquilino = form.ID_rol_persona === 'INQUILINO'
 
   return (
     <div>
@@ -128,7 +152,12 @@ function Personas() {
 
             <label>
               Número de documento
-              <input name="Documento" value={form.Documento} onChange={handleChange} />
+              <input
+                name="Documento"
+                value={form.Documento}
+                onChange={handleChange}
+                placeholder={form.ID_tipo_doc === 'CUIT' ? 'XX-XXXXXXXX-X' : form.ID_tipo_doc === 'DNI' ? 'XX.XXX.XXX' : ''}
+              />
             </label>
 
             <label>
@@ -151,15 +180,17 @@ function Personas() {
               </select>
             </label>
 
-            <label>
-              Estado
-              <select name="ID_estado_persona" value={form.ID_estado_persona} onChange={handleChange} required>
-                <option value="">Seleccionar...</option>
-                {estados.map((e) => (
-                  <option key={e.ID_estado_persona} value={e.ID_estado_persona}>{e.Descripcion}</option>
-                ))}
-              </select>
-            </label>
+            {esInquilino && (
+              <label>
+                Estado
+                <select name="ID_estado_persona" value={form.ID_estado_persona} onChange={handleChange} required>
+                  <option value="">Seleccionar...</option>
+                  {estados.map((e) => (
+                    <option key={e.ID_estado_persona} value={e.ID_estado_persona}>{e.Descripcion}</option>
+                  ))}
+                </select>
+              </label>
+            )}
 
             <label>
               Teléfono

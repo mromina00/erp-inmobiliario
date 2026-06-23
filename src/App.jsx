@@ -11,6 +11,7 @@ import DetalleContrato from './pages/DetalleContrato'
 import LibroDiario from './pages/LibroDiario'
 import Servicios from './pages/Servicios'
 import Tarjetas from './pages/Tarjetas'
+import IVA from './pages/IVA'
 import './App.css'
 
 function App() {
@@ -28,7 +29,7 @@ function App() {
             <Route path="/boletas" element={<Servicios />} />
             <Route path="/tarjetas" element={<Tarjetas />} />
             <Route path="/libro-diario" element={<LibroDiario />} />
-            <Route path="/iva" element={<Placeholder title="IVA compras / ventas" />} />
+            <Route path="/iva" element={<IVA />} />
             <Route path="/personas" element={<Personas />} />
             <Route path="/vencimientos" element={<Placeholder title="Vencimientos" />} />
             <Route path="/cuentas" element={<Cuentas />} />

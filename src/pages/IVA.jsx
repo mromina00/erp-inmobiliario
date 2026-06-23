@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import SelectorPersona from '../components/SelectorPersona'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -219,20 +220,24 @@ function IVA() {
             <form onSubmit={handleSubmitCompra} className="card" style={{ marginBottom: '1.5rem' }}>
               <p className="card-title">{editingCompraId ? 'Editar compra' : 'Nueva compra'}</p>
               <div className="form-grid">
-                <label>
-                  Empresa (nuestra S.A.)
-                  <select value={formCompra.ID_persona_empresa} onChange={(e) => setFormCompra({ ...formCompra, ID_persona_empresa: e.target.value })} required>
-                    <option value="">Seleccionar...</option>
-                    {personas.map((p) => <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>)}
-                  </select>
-                </label>
-                <label>
-                  Proveedor
-                  <select value={formCompra.ID_persona_proveedor} onChange={(e) => setFormCompra({ ...formCompra, ID_persona_proveedor: e.target.value })} required>
-                    <option value="">Seleccionar...</option>
-                    {personas.map((p) => <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>)}
-                  </select>
-                </label>
+              <SelectorPersona
+                  label="Empresa (nuestra S.A.)"
+                  value={formCompra.ID_persona_empresa}
+                  onChange={(v) => setFormCompra({ ...formCompra, ID_persona_empresa: v })}
+                  personas={personas}
+                  onPersonaCreada={loadAll}
+                  contexto="empresa"
+                  required
+                />
+                <SelectorPersona
+                  label="Proveedor"
+                  value={formCompra.ID_persona_proveedor}
+                  onChange={(v) => setFormCompra({ ...formCompra, ID_persona_proveedor: v })}
+                  personas={personas}
+                  onPersonaCreada={loadAll}
+                  contexto="proveedor"
+                  required
+                />
                 <label>
                   Tipo de comprobante
                   <select value={formCompra.ID_tipo_comprobante} onChange={(e) => setFormCompra({ ...formCompra, ID_tipo_comprobante: e.target.value })} required>
@@ -353,20 +358,24 @@ function IVA() {
             <form onSubmit={handleSubmitVenta} className="card" style={{ marginBottom: '1.5rem' }}>
               <p className="card-title">{editingVentaId ? 'Editar venta' : 'Nueva venta'}</p>
               <div className="form-grid">
-                <label>
-                  Empresa (nuestra S.A.)
-                  <select value={formVenta.ID_persona_empresa} onChange={(e) => setFormVenta({ ...formVenta, ID_persona_empresa: e.target.value })} required>
-                    <option value="">Seleccionar...</option>
-                    {personas.map((p) => <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>)}
-                  </select>
-                </label>
-                <label>
-                  Cliente
-                  <select value={formVenta.ID_persona_cliente} onChange={(e) => setFormVenta({ ...formVenta, ID_persona_cliente: e.target.value })} required>
-                    <option value="">Seleccionar...</option>
-                    {personas.map((p) => <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>)}
-                  </select>
-                </label>
+              <SelectorPersona
+                  label="Empresa (nuestra S.A.)"
+                  value={formVenta.ID_persona_empresa}
+                  onChange={(v) => setFormVenta({ ...formVenta, ID_persona_empresa: v })}
+                  personas={personas}
+                  onPersonaCreada={loadAll}
+                  contexto="empresa"
+                  required
+                />
+                <SelectorPersona
+                  label="Cliente"
+                  value={formVenta.ID_persona_cliente}
+                  onChange={(v) => setFormVenta({ ...formVenta, ID_persona_cliente: v })}
+                  personas={personas}
+                  onPersonaCreada={loadAll}
+                  contexto="cliente"
+                  required
+                />
                 <label>
                   Tipo de comprobante
                   <select value={formVenta.ID_tipo_comprobante} onChange={(e) => setFormVenta({ ...formVenta, ID_tipo_comprobante: e.target.value })} required>

@@ -10,22 +10,12 @@ const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  await prisma.tipo_comprobante.createMany({
-    data: [
-      { ID_tipo_comprobante: 'FACTURA_A', Descripcion: 'Factura A' },
-      { ID_tipo_comprobante: 'FACTURA_B', Descripcion: 'Factura B' },
-      { ID_tipo_comprobante: 'FACTURA_C', Descripcion: 'Factura C' },
-    ],
+  await prisma.roles_persona.create({
+    data: { ID_rol: 'SOCIEDAD', Descripcion: 'Sociedad' },
   })
-
-  console.log('Catálogos de IVA cargados correctamente')
+  console.log('Rol Sociedad agregado correctamente')
 }
 
 main()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
-  })
-  .finally(async () => {
-    process.exit(0)
-  })
+  .catch((e) => { console.error(e); process.exit(1) })
+  .finally(async () => { process.exit(0) })
