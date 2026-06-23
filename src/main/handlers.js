@@ -335,6 +335,21 @@ ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, 
   })
 
   ipcMain.handle('tarjetas:delete', async (event, id) => {
+    // 1. Borrar todas las cuotas de todos los gastos de esta tarjeta
+    const gastos = await prisma.tarjetas_gastos.findMany({ where: { ID_tarjeta: id } })
+    for (const g of gastos) {
+      await prisma.tarjetas_cuotas_resumen.deleteMany({ where: { ID_gasto: g.ID_gasto } })
+    }
+    // 2. Borrar los gastos
+    await prisma.tarjetas_gastos.deleteMany({ where: { ID_tarjeta: id } })
+    // 3. Borrar cuotas huérfanas que apunten a resúmenes de esta tarjeta
+    const resumenes = await prisma.resumenes_tarjeta.findMany({ where: { ID_tarjeta_titular: id } })
+    for (const r of resumenes) {
+      await prisma.tarjetas_cuotas_resumen.deleteMany({ where: { ID_resumen_asociado: r.ID_resumen } })
+    }
+    // 4. Borrar los resúmenes
+    await prisma.resumenes_tarjeta.deleteMany({ where: { ID_tarjeta_titular: id } })
+    // 5. Borrar la tarjeta
     return toPlain(await prisma.tarjetas.delete({ where: { ID_tarjeta: id } }))
   })
 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import AccionesMenu from '../components/AccionesMenu'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -551,8 +552,27 @@ function Tarjetas() {
                   <td>{t.Ultimos_4_digitos ? `**** ${t.Ultimos_4_digitos}` : '-'}</td>
                   <td>{fmtMoney(t.Limite_Credito)}</td>
                   <td style={{ textAlign: 'right' }}>
-                    <button onClick={() => abrirTarjeta(t)}>Ver detalle</button>{' '}
-                    <button onClick={() => handleDeleteTarjeta(t.ID_tarjeta)}>Eliminar</button>
+                    <AccionesMenu acciones={[
+                      { label: 'Ver detalle', onClick: () => abrirTarjeta(t) },
+                      {
+                        label: 'Editar', onClick: () => {
+                          setFormTarjeta({
+                            Nombre_Comercial: t.Nombre_Comercial || '',
+                            ID_marca_tarjeta: t.ID_marca_tarjeta || '',
+                            ID_persona_usuario: t.ID_persona_usuario || '',
+                            ID_tarjeta_principal: t.ID_tarjeta_principal || '',
+                            Banco_Institucion: t.Banco_Institucion || '',
+                            Ultimos_4_digitos: t.Ultimos_4_digitos || '',
+                            Limite_Credito: t.Limite_Credito ?? '',
+                            ID_cuenta_debito: t.ID_cuenta_debito || '',
+                            Notas: t.Notas || '',
+                          })
+                          setEditingTarjetaId(t.ID_tarjeta)
+                          setShowFormTarjeta(true)
+                        }
+                      },
+                      { label: 'Eliminar', onClick: () => handleDeleteTarjeta(t.ID_tarjeta) },
+                    ]} />
                   </td>
                 </tr>
               ))}
