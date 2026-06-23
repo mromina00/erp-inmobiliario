@@ -10,10 +10,15 @@ const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  await prisma.roles_persona.create({
-    data: { ID_rol: 'SOCIEDAD', Descripcion: 'Sociedad' },
+  await prisma.estados_vencimiento.createMany({
+    data: [
+      { ID_estado_vencimiento: 'PENDIENTE', Descripcion: 'Pendiente' },
+      { ID_estado_vencimiento: 'PAGADO', Descripcion: 'Pagado' },
+      { ID_estado_vencimiento: 'VENCIDO', Descripcion: 'Vencido' },
+    ],
   })
-  console.log('Rol Sociedad agregado correctamente')
+
+  console.log('Catálogos de vencimientos cargados correctamente')
 }
 
 main()
