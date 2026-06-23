@@ -73,6 +73,18 @@ contextBridge.exposeInMainWorld('api', {
     delete: (id) => ipcRenderer.invoke('boletas:delete', id),
     pagar: (id, cuentaId, fecha, medio, responsable) => ipcRenderer.invoke('boletas:pagar', { id, cuentaId, fecha, medio, responsable }),
   },
+  ivaCompras: {
+    getAll: () => ipcRenderer.invoke('ivaCompras:getAll'),
+    create: (data) => ipcRenderer.invoke('ivaCompras:create', data),
+    update: (id, data) => ipcRenderer.invoke('ivaCompras:update', { id, data }),
+    delete: (id) => ipcRenderer.invoke('ivaCompras:delete', id),
+  },
+  ivaVentas: {
+    getAll: () => ipcRenderer.invoke('ivaVentas:getAll'),
+    create: (data) => ipcRenderer.invoke('ivaVentas:create', data),
+    update: (id, data) => ipcRenderer.invoke('ivaVentas:update', { id, data }),
+    delete: (id) => ipcRenderer.invoke('ivaVentas:delete', id),
+  },
   dashboard: {
     getMetrics: () => ipcRenderer.invoke('dashboard:getMetrics'),
   },
@@ -96,5 +108,6 @@ contextBridge.exposeInMainWorld('api', {
     responsablesPago: () => ipcRenderer.invoke('catalogos:responsablesPago'),
     marcasTarjeta: () => ipcRenderer.invoke('catalogos:marcasTarjeta'),
     estadosResumen: () => ipcRenderer.invoke('catalogos:estadosResumen'),
+    tiposComprobante: () => ipcRenderer.invoke('catalogos:tiposComprobante'),
   },
 })

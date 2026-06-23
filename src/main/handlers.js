@@ -536,6 +536,63 @@ ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, 
   })
 
   // ============================================================
+  // IVA COMPRAS Y VENTAS
+  // ============================================================
+  ipcMain.handle('ivaCompras:getAll', async () => {
+    const data = await prisma.iva_compras.findMany({
+      include: {
+        empresa: true,
+        proveedor: true,
+        tipo_comprobante: true,
+      },
+      orderBy: { Fecha_Factura: 'desc' },
+    })
+    return toPlain(data)
+  })
+
+  ipcMain.handle('ivaCompras:create', async (event, data) => {
+    return toPlain(await prisma.iva_compras.create({ data }))
+  })
+
+  ipcMain.handle('ivaCompras:update', async (event, { id, data }) => {
+    return toPlain(await prisma.iva_compras.update({
+      where: { ID_iva_compra: id },
+      data,
+    }))
+  })
+
+  ipcMain.handle('ivaCompras:delete', async (event, id) => {
+    return toPlain(await prisma.iva_compras.delete({ where: { ID_iva_compra: id } }))
+  })
+
+  ipcMain.handle('ivaVentas:getAll', async () => {
+    const data = await prisma.iva_ventas.findMany({
+      include: {
+        empresa: true,
+        cliente: true,
+        tipo_comprobante: true,
+      },
+      orderBy: { Fecha_Factura: 'desc' },
+    })
+    return toPlain(data)
+  })
+
+  ipcMain.handle('ivaVentas:create', async (event, data) => {
+    return toPlain(await prisma.iva_ventas.create({ data }))
+  })
+
+  ipcMain.handle('ivaVentas:update', async (event, { id, data }) => {
+    return toPlain(await prisma.iva_ventas.update({
+      where: { ID_iva_venta: id },
+      data,
+    }))
+  })
+
+  ipcMain.handle('ivaVentas:delete', async (event, id) => {
+    return toPlain(await prisma.iva_ventas.delete({ where: { ID_iva_venta: id } }))
+  })
+
+  // ============================================================
   // DASHBOARD
   // ============================================================
   ipcMain.handle('dashboard:getMetrics', async () => {
@@ -591,4 +648,5 @@ ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, 
   ipcMain.handle('catalogos:responsablesPago', async () => toPlain(await prisma.responsables_pago.findMany()))
   ipcMain.handle('catalogos:marcasTarjeta', async () => toPlain(await prisma.marcas_tarjeta.findMany()))
   ipcMain.handle('catalogos:estadosResumen', async () => toPlain(await prisma.estados_resumen.findMany()))
+  ipcMain.handle('catalogos:tiposComprobante', async () => toPlain(await prisma.tipo_comprobante.findMany()))
 }

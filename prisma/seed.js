@@ -10,25 +10,15 @@ const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  await prisma.marcas_tarjeta.createMany({
+  await prisma.tipo_comprobante.createMany({
     data: [
-      { ID_marca: 'VISA', Descripcion: 'Visa' },
-      { ID_marca: 'MASTERCARD', Descripcion: 'Mastercard' },
-      { ID_marca: 'AMEX', Descripcion: 'American Express' },
-      { ID_marca: 'NARANJA', Descripcion: 'Naranja' },
-      { ID_marca: 'CABAL', Descripcion: 'Cabal' },
+      { ID_tipo_comprobante: 'FACTURA_A', Descripcion: 'Factura A' },
+      { ID_tipo_comprobante: 'FACTURA_B', Descripcion: 'Factura B' },
+      { ID_tipo_comprobante: 'FACTURA_C', Descripcion: 'Factura C' },
     ],
   })
 
-  await prisma.estados_resumen.createMany({
-    data: [
-      { ID_estado_resumen: 'PENDIENTE', Descripcion: 'Pendiente' },
-      { ID_estado_resumen: 'PAGADO', Descripcion: 'Pagado' },
-      { ID_estado_resumen: 'VENCIDO', Descripcion: 'Vencido' },
-    ],
-  })
-
-  console.log('Catálogos de tarjetas cargados correctamente')
+  console.log('Catálogos de IVA cargados correctamente')
 }
 
 main()
