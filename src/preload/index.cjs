@@ -43,6 +43,7 @@ contextBridge.exposeInMainWorld('api', {
     delete: (id) => ipcRenderer.invoke('libroDiario:delete', id),
   },
   cobros: {
+    getAll: () => ipcRenderer.invoke('cobros:getAll'),
     create: (data) => ipcRenderer.invoke('cobros:create', data),
     delete: (id, periodoId) => ipcRenderer.invoke('cobros:delete', { id, periodoId }),
   },

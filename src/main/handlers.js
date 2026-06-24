@@ -280,7 +280,7 @@ export function registerHandlers() {
       },
     }))
   })
-  
+
   ipcMain.handle('libroDiario:verificar', async (event, id) => {
     const mov = await prisma.libro_diario.findUnique({ where: { ID_movimiento: id } })
     return toPlain({
@@ -296,7 +296,28 @@ export function registerHandlers() {
   // ============================================================
   // COBROS DE ALQUILER
   // ============================================================
-ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, ...data }) => {
+  ipcMain.handle('cobros:getAll', async () => {
+    const data = await prisma.cobros_alquiler.findMany({
+      include: {
+        periodo_contrato: {
+          include: {
+            contrato: {
+              include: {
+                unidad: { include: { edificio: true } },
+                inquilino: true,
+              },
+            },
+          },
+        },
+        cuenta_destino: true,
+        imputacion: true,
+      },
+      orderBy: { Fecha_Pago: 'desc' },
+    })
+    return toPlain(data)
+  })
+  
+  ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, ...data }) => {
     const cobro = await prisma.cobros_alquiler.create({ data })
 
     if (data.ID_periodo_contrato) {
