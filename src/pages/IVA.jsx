@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import SelectorPersona from '../components/SelectorPersona'
+import MontoInput, { parseMonto } from '../components/MontoInput'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -11,24 +12,10 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString('es-AR')
 }
 
-// Formatea mientras escribís: solo dígitos, con separador de miles
-function formatMonto(value) {
-  const digits = value.replace(/\D/g, '')
-  if (!digits) return ''
-  return Number(digits).toLocaleString('es-AR')
-}
-
 function formatFactura(value) {
   const digits = value.replace(/\D/g, '')
   if (digits.length <= 4) return digits
   return `${digits.slice(0, 4)}-${digits.slice(4, 12)}`
-}
-
-function parseMonto(value) {
-  if (!value) return null
-  const digits = value.replace(/\./g, '').replace(',', '.')
-  const n = parseFloat(digits)
-  return isNaN(n) ? null : n
 }
 
 const emptyCompra = {
@@ -67,23 +54,6 @@ function calcularTotal(form, esCompra = true) {
     ? ['Neto_Gravado_21', 'IVA_21', 'Neto_Gravado_105', 'IVA_105', 'Monto_No_Gravado_Exento', 'Retencion_IVA', 'Retencion_Ganancias', 'Retencion_IIBB']
     : ['Neto_Gravado_21', 'IVA_21', 'Neto_Gravado_105', 'IVA_105', 'Monto_No_Gravado_Exento']
   return campos.reduce((acc, k) => acc + (parseMonto(form[k]) || 0), 0)
-}
-
-function MontoInput({ label, value, onChange }) {
-  return (
-    <label>
-      {label}
-      <div style={{ position: 'relative' }}>
-        <span style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', color: '#888', fontSize: '14px' }}>$</span>
-        <input
-          value={value}
-          onChange={(e) => onChange(formatMonto(e.target.value))}
-          style={{ paddingLeft: '22px' }}
-          inputMode="numeric"
-        />
-      </div>
-    </label>
-  )
 }
 
 function IVA() {

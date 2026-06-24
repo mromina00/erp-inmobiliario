@@ -266,6 +266,21 @@ export function registerHandlers() {
     return toPlain(data)
   })
 
+  ipcMain.handle('libroDiario:crear', async (event, data) => {
+    const { ID_cuenta, ID_persona_entidad, ID_unidad, ID_resumen_tarjeta, ID_medio_pago, ID_subcategoria_flujo, ...rest } = data
+    return toPlain(await prisma.libro_diario.create({
+      data: {
+        ...rest,
+        cuenta: { connect: { ID_cuenta } },
+        medio_pago: { connect: { ID_medio: ID_medio_pago } },
+        subcategoria: { connect: { ID_subcat: ID_subcategoria_flujo } },
+        ...(ID_persona_entidad ? { persona_entidad: { connect: { ID_persona: ID_persona_entidad } } } : {}),
+        ...(ID_unidad ? { unidad: { connect: { ID_unidad } } } : {}),
+        ...(ID_resumen_tarjeta ? { resumen_tarjeta: { connect: { ID_resumen: ID_resumen_tarjeta } } } : {}),
+      },
+    }))
+  })
+
   // ============================================================
   // COBROS DE ALQUILER
   // ============================================================

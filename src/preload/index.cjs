@@ -38,6 +38,7 @@ contextBridge.exposeInMainWorld('api', {
   },
   libroDiario: {
     getAll: () => ipcRenderer.invoke('libroDiario:getAll'),
+    crear: (data) => ipcRenderer.invoke('libroDiario:crear', data),
   },
   cobros: {
     create: (data) => ipcRenderer.invoke('cobros:create', data),
@@ -72,6 +73,14 @@ contextBridge.exposeInMainWorld('api', {
     update: (id, data) => ipcRenderer.invoke('boletas:update', { id, data }),
     delete: (id) => ipcRenderer.invoke('boletas:delete', id),
     pagar: (id, cuentaId, fecha, medio, responsable) => ipcRenderer.invoke('boletas:pagar', { id, cuentaId, fecha, medio, responsable }),
+  },
+  vencimientos: {
+    getAll: () => ipcRenderer.invoke('vencimientos:getAll'),
+    getProximos: () => ipcRenderer.invoke('vencimientos:getProximos'),
+    create: (data) => ipcRenderer.invoke('vencimientos:create', data),
+    update: (id, data) => ipcRenderer.invoke('vencimientos:update', { id, data }),
+    marcarPagado: (id, fecha) => ipcRenderer.invoke('vencimientos:marcarPagado', { id, fecha }),
+    delete: (id) => ipcRenderer.invoke('vencimientos:delete', id),
   },
   ivaCompras: {
     getAll: () => ipcRenderer.invoke('ivaCompras:getAll'),
@@ -109,5 +118,6 @@ contextBridge.exposeInMainWorld('api', {
     marcasTarjeta: () => ipcRenderer.invoke('catalogos:marcasTarjeta'),
     estadosResumen: () => ipcRenderer.invoke('catalogos:estadosResumen'),
     tiposComprobante: () => ipcRenderer.invoke('catalogos:tiposComprobante'),
+    estadosVencimiento: () => ipcRenderer.invoke('catalogos:estadosVencimiento'),
   },
 })
