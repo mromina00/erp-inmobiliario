@@ -280,6 +280,18 @@ export function registerHandlers() {
       },
     }))
   })
+  
+  ipcMain.handle('libroDiario:verificar', async (event, id) => {
+    const mov = await prisma.libro_diario.findUnique({ where: { ID_movimiento: id } })
+    return toPlain({
+      tieneOrigen: mov?.Modulo_Origen && mov.Modulo_Origen !== 'MANUAL',
+      moduloOrigen: mov?.Modulo_Origen,
+    })
+  })
+
+  ipcMain.handle('libroDiario:delete', async (event, id) => {
+    return toPlain(await prisma.libro_diario.delete({ where: { ID_movimiento: id } }))
+  })
 
   // ============================================================
   // COBROS DE ALQUILER
@@ -639,6 +651,13 @@ ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, 
   })
 
   ipcMain.handle('vencimientos:delete', async (event, id) => {
+    // Borrar movimiento asociado en libro diario si existe
+    await prisma.libro_diario.deleteMany({
+      where: {
+        Modulo_Origen: 'VENCIMIENTOS',
+        ID_referencia_origen: id,
+      },
+    })
     return toPlain(await prisma.vencimientos.delete({ where: { ID_vencimiento: id } }))
   })
 
@@ -757,4 +776,5 @@ ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, 
   ipcMain.handle('catalogos:estadosResumen', async () => toPlain(await prisma.estados_resumen.findMany()))
   ipcMain.handle('catalogos:tiposComprobante', async () => toPlain(await prisma.tipo_comprobante.findMany()))
   ipcMain.handle('catalogos:estadosVencimiento', async () => toPlain(await prisma.estados_vencimiento.findMany()))
+  ipcMain.handle('catalogos:subcategoriasFlujo', async () => toPlain(await prisma.subcategorias_flujo.findMany()))
 }

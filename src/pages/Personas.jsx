@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import ConfirmModal from '../components/ConfirmModal'
 
 const emptyForm = {
   ID_persona: '',
@@ -115,10 +116,17 @@ function Personas() {
     loadAll()
   }
 
+  const [confirmModal, setConfirmModal] = useState(null)
+
   async function handleDelete(id) {
-    if (!confirm('¿Eliminar esta persona?')) return
-    await window.api.personas.delete(id)
-    loadAll()
+    setConfirmModal({
+      mensaje: '¿Eliminar esta persona? Esta acción no se puede deshacer.',
+      onConfirmar: async () => {
+        await window.api.personas.delete(id)
+        setConfirmModal(null)
+        loadAll()
+      },
+    })
   }
 
   const esInquilino = form.ID_rol_persona === 'INQUILINO'
@@ -262,6 +270,14 @@ function Personas() {
           </table>
         )}
       </div>
+      {confirmModal && (
+        <ConfirmModal
+          mensaje={confirmModal.mensaje}
+          onConfirmar={confirmModal.onConfirmar}
+          onCancelar={() => setConfirmModal(null)}
+          peligroso
+        />
+      )}
     </div>
   )
 }

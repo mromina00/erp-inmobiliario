@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import SelectorPersona from '../components/SelectorPersona'
 import MontoInput, { parseMonto } from '../components/MontoInput'
+import ConfirmModal from '../components/ConfirmModal'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -70,6 +71,7 @@ function IVA() {
   const [formVenta, setFormVenta] = useState(emptyVenta)
   const [editingVentaId, setEditingVentaId] = useState(null)
   const [showFormVenta, setShowFormVenta] = useState(false)
+  const [confirmModal, setConfirmModal] = useState(null)
 
   async function loadAll() {
     const [c, v, p, tc] = await Promise.all([
@@ -324,7 +326,7 @@ function IVA() {
                       <td>{fmtMoney(c.Total_Facturado)}</td>
                       <td style={{ textAlign: 'right' }}>
                         <button onClick={() => startEditCompra(c)}>Editar</button>{' '}
-                        <button onClick={async () => { if (!confirm('¿Eliminar?')) return; await window.api.ivaCompras.delete(c.ID_iva_compra); loadAll() }}>Eliminar</button>
+                        <button onClick={() => setConfirmModal({ mensaje: '¿Eliminar esta compra?', onConfirmar: async () => { await window.api.ivaCompras.delete(c.ID_iva_compra); setConfirmModal(null); loadAll() } })}>Eliminar</button>
                       </td>
                     </tr>
                   ))}
@@ -436,7 +438,7 @@ function IVA() {
                       <td>{fmtMoney(v.Total_Facturado)}</td>
                       <td style={{ textAlign: 'right' }}>
                         <button onClick={() => startEditVenta(v)}>Editar</button>{' '}
-                        <button onClick={async () => { if (!confirm('¿Eliminar?')) return; await window.api.ivaVentas.delete(v.ID_iva_venta); loadAll() }}>Eliminar</button>
+                        <button onClick={() => setConfirmModal({ mensaje: '¿Eliminar esta venta?', onConfirmar: async () => { await window.api.ivaVentas.delete(v.ID_iva_venta); setConfirmModal(null); loadAll() } })}>Eliminar</button>
                       </td>
                     </tr>
                   ))}
@@ -445,6 +447,14 @@ function IVA() {
             )}
           </div>
         </>
+      )}
+      {confirmModal && (
+        <ConfirmModal
+          mensaje={confirmModal.mensaje}
+          onConfirmar={confirmModal.onConfirmar}
+          onCancelar={() => setConfirmModal(null)}
+          peligroso
+        />
       )}
     </div>
   )

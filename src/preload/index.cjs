@@ -39,6 +39,8 @@ contextBridge.exposeInMainWorld('api', {
   libroDiario: {
     getAll: () => ipcRenderer.invoke('libroDiario:getAll'),
     crear: (data) => ipcRenderer.invoke('libroDiario:crear', data),
+    verificar: (id) => ipcRenderer.invoke('libroDiario:verificar', id),
+    delete: (id) => ipcRenderer.invoke('libroDiario:delete', id),
   },
   cobros: {
     create: (data) => ipcRenderer.invoke('cobros:create', data),
@@ -119,5 +121,6 @@ contextBridge.exposeInMainWorld('api', {
     estadosResumen: () => ipcRenderer.invoke('catalogos:estadosResumen'),
     tiposComprobante: () => ipcRenderer.invoke('catalogos:tiposComprobante'),
     estadosVencimiento: () => ipcRenderer.invoke('catalogos:estadosVencimiento'),
+    subcategoriasFlujo: () => ipcRenderer.invoke('catalogos:subcategoriasFlujo'),
   },
 })

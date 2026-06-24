@@ -80,6 +80,12 @@ function DetalleContrato() {
     })
     setCobrando(periodo.ID_periodo_contrato)
   }
+  
+  function mesesPorPeriodicidad(id) {
+    if (id === 'CUATRIMESTRAL') return 4
+    if (id === 'SEMESTRAL') return 6
+    return null
+  }
 
   async function confirmarCobro(periodoId) {
     if (!cobroForm.ID_cuenta_destino) {
@@ -268,12 +274,6 @@ function DetalleContrato() {
       </div>
     </div>
   )
-}
-
-function mesesPorPeriodicidad(id) {
-  if (id === 'CUATRIMESTRAL') return 4
-  if (id === 'SEMESTRAL') return 6
-  return null
 }
 
 export default DetalleContrato

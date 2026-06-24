@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import AccionesMenu from '../components/AccionesMenu'
 import SelectorPersona from '../components/SelectorPersona'
+import ConfirmModal from '../components/ConfirmModal'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -75,6 +76,8 @@ function Tarjetas() {
 
   const [pagandoResumenId, setPagandoResumenId] = useState(null)
   const [pagoForm, setPagoForm] = useState({ cuentaId: '', fecha: '', monto: '', medio: '' })
+
+  const [confirmModal, setConfirmModal] = useState(null)
 
   async function loadTarjetas() {
     const [t, p, m, c, mp, er] = await Promise.all([
@@ -182,16 +185,26 @@ function Tarjetas() {
     loadDetalle(tarjetaActiva.ID_tarjeta)
   }
 
-  async function handleDeleteTarjeta(id) {
-    if (!confirm('¿Eliminar esta tarjeta?')) return
-    await window.api.tarjetas.delete(id)
-    loadTarjetas()
+async function handleDeleteTarjeta(id) {
+    setConfirmModal({
+      mensaje: '¿Eliminar esta tarjeta? Se eliminarán también todos sus gastos, cuotas y resúmenes.',
+      onConfirmar: async () => {
+        await window.api.tarjetas.delete(id)
+        setConfirmModal(null)
+        loadTarjetas()
+      },
+    })
   }
 
   async function handleDeleteGasto(id) {
-    if (!confirm('¿Eliminar este gasto?')) return
-    await window.api.gastos.delete(id)
-    loadDetalle(tarjetaActiva.ID_tarjeta)
+    setConfirmModal({
+      mensaje: '¿Eliminar este gasto y todas sus cuotas?',
+      onConfirmar: async () => {
+        await window.api.gastos.delete(id)
+        setConfirmModal(null)
+        loadDetalle(tarjetaActiva.ID_tarjeta)
+      },
+    })
   }
 
   async function handleDeleteResumen(id) {
@@ -581,6 +594,14 @@ function Tarjetas() {
           </table>
         )}
       </div>
+      {confirmModal && (
+        <ConfirmModal
+          mensaje={confirmModal.mensaje}
+          onConfirmar={confirmModal.onConfirmar}
+          onCancelar={() => setConfirmModal(null)}
+          peligroso
+        />
+      )}
     </div>
   )
 }

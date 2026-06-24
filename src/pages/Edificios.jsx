@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import ConfirmModal from '../components/ConfirmModal'
 
 const emptyForm = { Nombre: '' }
 
@@ -7,6 +8,7 @@ function Edificios() {
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
   const [showForm, setShowForm] = useState(false)
+  const [confirmModal, setConfirmModal] = useState(null)
 
   async function load() {
     const data = await window.api.edificios.getAll()
@@ -48,9 +50,14 @@ function Edificios() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('¿Eliminar este edificio?')) return
-    await window.api.edificios.delete(id)
-    load()
+    setConfirmModal({
+      mensaje: '¿Eliminar este edificio?',
+      onConfirmar: async () => {
+        await window.api.edificios.delete(id)
+        setConfirmModal(null)
+        load()
+      },
+    })
   }
 
   return (
@@ -100,6 +107,14 @@ function Edificios() {
           </table>
         )}
       </div>
+      {confirmModal && (
+        <ConfirmModal
+          mensaje={confirmModal.mensaje}
+          onConfirmar={confirmModal.onConfirmar}
+          onCancelar={() => setConfirmModal(null)}
+          peligroso
+        />
+      )}
     </div>
   )
 }

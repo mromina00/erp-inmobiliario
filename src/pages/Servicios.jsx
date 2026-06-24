@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import SelectorPersona from '../components/SelectorPersona'
+import ConfirmModal from '../components/ConfirmModal'
 
 const emptyServicio = {
   ID_unidad: "",
@@ -58,6 +59,8 @@ function Servicios() {
   const [formBoleta, setFormBoleta] = useState(emptyBoleta);
   const [editingBoletaId, setEditingBoletaId] = useState(null);
   const [showFormBoleta, setShowFormBoleta] = useState(false);
+
+  const [confirmModal, setConfirmModal] = useState(null)
 
   const [pagandoId, setPagandoId] = useState(null);
   const [pagoForm, setPagoForm] = useState({
@@ -173,15 +176,25 @@ function Servicios() {
   }
 
   async function handleDeleteServicio(id) {
-    if (!confirm("¿Eliminar este servicio?")) return;
-    await window.api.servicios.delete(id);
-    loadServicios();
+    setConfirmModal({
+      mensaje: '¿Eliminar este servicio? Se eliminarán también todas sus boletas.',
+      onConfirmar: async () => {
+        await window.api.servicios.delete(id)
+        setConfirmModal(null)
+        loadServicios()
+      },
+    })
   }
 
   async function handleDeleteBoleta(id) {
-    if (!confirm("¿Eliminar esta boleta?")) return;
-    await window.api.boletas.delete(id);
-    loadBoletas(servicioActivo.ID_servicio_prop);
+    setConfirmModal({
+      mensaje: '¿Eliminar esta boleta?',
+      onConfirmar: async () => {
+        await window.api.boletas.delete(id)
+        setConfirmModal(null)
+        loadBoletas(servicioActivo.ID_servicio_prop)
+      },
+    })
   }
 
   function abrirServicio(servicio) {
@@ -638,6 +651,14 @@ function Servicios() {
           </table>
         )}
       </div>
+      {confirmModal && (
+        <ConfirmModal
+          mensaje={confirmModal.mensaje}
+          onConfirmar={confirmModal.onConfirmar}
+          onCancelar={() => setConfirmModal(null)}
+          peligroso
+        />
+      )}
     </div>
   );
 }

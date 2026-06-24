@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SelectorPersona from '../components/SelectorPersona'
+import ConfirmModal from '../components/ConfirmModal'
 
 const emptyForm = {
   ID_unidad: '',
@@ -40,6 +41,7 @@ function Contratos() {
   const [garantesSeleccionados, setGarantesSeleccionados] = useState([])
   const [editingId, setEditingId] = useState(null)
   const [showForm, setShowForm] = useState(false)
+  const [confirmModal, setConfirmModal] = useState(null)
 
   async function loadAll() {
     const [c, u, p, e, ti, pe] = await Promise.all([
@@ -133,9 +135,14 @@ function Contratos() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('¿Eliminar este contrato?')) return
-    await window.api.contratos.delete(id)
-    loadAll()
+    setConfirmModal({
+      mensaje: '¿Eliminar este contrato? Se eliminarán también todos sus períodos y garantes asociados.',
+      onConfirmar: async () => {
+        await window.api.contratos.delete(id)
+        setConfirmModal(null)
+        loadAll()
+      },
+    })
   }
 
   return (
@@ -320,6 +327,14 @@ function Contratos() {
           </table>
         )}
       </div>
+      {confirmModal && (
+        <ConfirmModal
+          mensaje={confirmModal.mensaje}
+          onConfirmar={confirmModal.onConfirmar}
+          onCancelar={() => setConfirmModal(null)}
+          peligroso
+        />
+      )}
     </div>
   )
 }

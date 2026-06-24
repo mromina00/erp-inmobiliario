@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import SelectorPersona from '../components/SelectorPersona'
+import ConfirmModal from '../components/ConfirmModal'
 
 const emptyForm = {
   Nombre_Cuenta: '',
@@ -22,6 +23,7 @@ function Cuentas() {
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
   const [showForm, setShowForm] = useState(false)
+  const [confirmModal, setConfirmModal] = useState(null)
 
   async function loadAll() {
     const [c, t, m, p] = await Promise.all([
@@ -82,9 +84,14 @@ function Cuentas() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('¿Eliminar esta cuenta?')) return
-    await window.api.cuentas.delete(id)
-    loadAll()
+    setConfirmModal({
+      mensaje: '¿Eliminar esta cuenta?',
+      onConfirmar: async () => {
+        await window.api.cuentas.delete(id)
+        setConfirmModal(null)
+        loadAll()
+      },
+    })
   }
 
   return (
@@ -189,6 +196,14 @@ function Cuentas() {
           </table>
         )}
       </div>
+      {confirmModal && (
+        <ConfirmModal
+          mensaje={confirmModal.mensaje}
+          onConfirmar={confirmModal.onConfirmar}
+          onCancelar={() => setConfirmModal(null)}
+          peligroso
+        />
+      )}
     </div>
   )
 }

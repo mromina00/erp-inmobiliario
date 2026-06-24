@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import MontoInput, { parseMonto } from '../components/MontoInput'
+import ConfirmModal from '../components/ConfirmModal'
 
 function fmtMoney(n) {
   if (!n) return '-'
@@ -46,6 +47,7 @@ function Vencimientos() {
   const [pagandoId, setPagandoId] = useState(null)
   const [pagoForm, setPagoForm] = useState({ fecha: '', cuentaId: '', medio: '' })
   const [filtro, setFiltro] = useState('PENDIENTE')
+  const [confirmModal, setConfirmModal] = useState(null)
 
   async function loadAll() {
     const [v, c, mp] = await Promise.all([
@@ -95,7 +97,7 @@ function Vencimientos() {
       ID_cuenta: pagoForm.cuentaId,
       ID_persona_entidad: null,
       Detalle: `Pago vencimiento - ${v.Detalle}`,
-      Monto: -(parseMonto(String(v.Monto_Estimado)) || 0),
+      Monto: -(Number(v.Monto_Estimado) || 0),
       ID_medio_pago: pagoForm.medio,
       ID_subcategoria_flujo: 'OTROS_INGRESOS',
       Modulo_Origen: 'VENCIMIENTOS',
@@ -109,9 +111,14 @@ function Vencimientos() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('¿Eliminar este vencimiento?')) return
-    await window.api.vencimientos.delete(id)
-    loadAll()
+    setConfirmModal({
+      mensaje: '¿Eliminar este vencimiento?',
+      onConfirmar: async () => {
+        await window.api.vencimientos.delete(id)
+        setConfirmModal(null)
+        loadAll()
+      },
+    })
   }
 
   const vencimientosConEstado = vencimientos.map((v) => ({ ...v, _estado: estadoCalculado(v) }))
@@ -271,6 +278,14 @@ function Vencimientos() {
           </table>
         )}
       </div>
+      {confirmModal && (
+        <ConfirmModal
+          mensaje={confirmModal.mensaje}
+          onConfirmar={confirmModal.onConfirmar}
+          onCancelar={() => setConfirmModal(null)}
+          peligroso
+        />
+      )}
     </div>
   )
 }
