@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { unidades as unidadesApi, edificios as edificiosApi, catalogos } from '../services/api'
 import { useNavigate } from 'react-router-dom'
 import ConfirmModal from '../components/ConfirmModal'
 
@@ -40,11 +41,11 @@ function Unidades() {
 
   async function loadAll() {
     const [u, ed, t, p, e] = await Promise.all([
-      window.api.unidades.getAll(),
-      window.api.edificios.getAll(),
-      window.api.catalogos.tiposUnidad(),
-      window.api.catalogos.perfilesCobro(),
-      window.api.catalogos.estadosUnidad(),
+      unidadesApi.getAll(),
+      edificiosApi.getAll(),
+      catalogos.tiposUnidad(),
+      catalogos.perfilesCobro(),
+      catalogos.estadosUnidad(),
     ])
     setUnidades(u)
     setEdificios(ed)
@@ -96,10 +97,10 @@ function Unidades() {
     }
 
     if (editingId) {
-      await window.api.unidades.update(editingId, data)
+      await unidadesApi.update(editingId, data)
     } else {
       const id = 'U-' + Date.now()
-      await window.api.unidades.create({ ID_unidad: id, ...data })
+      await unidadesApi.create(data)
     }
 
     setShowForm(false)
@@ -112,7 +113,7 @@ function Unidades() {
     setConfirmModal({
       mensaje: '¿Eliminar esta unidad? Si tiene contratos asociados, pueden generarse errores.',
       onConfirmar: async () => {
-        await window.api.unidades.delete(id)
+        await unidadesApi.delete(id)
         setConfirmModal(null)
         loadAll()
       },

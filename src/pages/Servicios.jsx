@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { servicios as serviciosApi, boletas as boletasApi, unidades as unidadesApi, personas as personasApi, cuentas as cuentasApi, catalogos } from "../services/api"
 import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
 
@@ -71,14 +72,14 @@ function Servicios() {
 
   async function loadServicios() {
     const [s, u, p, ts, eb, r, c, mp] = await Promise.all([
-      window.api.servicios.getAll(),
-      window.api.unidades.getAll(),
-      window.api.personas.getAll(),
-      window.api.catalogos.tiposServicio(),
-      window.api.catalogos.estadosBoleta(),
-      window.api.catalogos.responsablesPago(),
-      window.api.cuentas.getAll(),
-      window.api.catalogos.mediosPago(),
+      serviciosApi.getAll(),
+      unidadesApi.getAll(),
+      personasApi.getAll(),
+      catalogos.tiposServicio(),
+      catalogos.estadosBoleta(),
+      catalogos.responsablesPago(),
+      cuentasApi.getAll(),
+      catalogos.mediosPago(),
     ]);
     setServicios(s);
     setUnidades(u);
@@ -91,7 +92,7 @@ function Servicios() {
   }
 
   async function loadBoletas(servicioId) {
-    const data = await window.api.boletas.getByServicio(servicioId);
+    const data = await boletasApi.getByServicio(servicioId);
     setBoletas(data);
   }
 
@@ -110,13 +111,10 @@ function Servicios() {
   async function handleSubmitServicio(e) {
     e.preventDefault();
     if (editingServicioId) {
-      await window.api.servicios.update(editingServicioId, formServicio);
+      await serviciosApi.update(editingServicioId, formServicio);
     } else {
       const id = "SP-" + Date.now();
-      await window.api.servicios.create({
-        ID_servicio_prop: id,
-        ...formServicio,
-      });
+      await serviciosApi.create(formServicio);
     }
     setShowFormServicio(false);
     setFormServicio(emptyServicio);
@@ -142,10 +140,10 @@ function Servicios() {
       Fecha_Pago: null,
     };
     if (editingBoletaId) {
-      await window.api.boletas.update(editingBoletaId, data);
+      await boletasApi.update(editingBoletaId, data);
     } else {
       const id = "BOL-" + Date.now();
-      await window.api.boletas.create({ ID_boleta: id, ...data });
+      await boletasApi.create(data);
     }
     setShowFormBoleta(false);
     setFormBoleta(emptyBoleta);
@@ -163,7 +161,7 @@ function Servicios() {
       alert("Completá cuenta y medio de pago");
       return;
     }
-    await window.api.boletas.pagar(
+    await boletasApi.pagar(
       boleta.ID_boleta,
       pagoForm.cuentaId || null,
       pagoForm.fecha + "T00:00:00.000Z",
@@ -179,7 +177,7 @@ function Servicios() {
     setConfirmModal({
       mensaje: '¿Eliminar este servicio? Se eliminarán también todas sus boletas.',
       onConfirmar: async () => {
-        await window.api.servicios.delete(id)
+        await serviciosApi.delete(id)
         setConfirmModal(null)
         loadServicios()
       },
@@ -190,7 +188,7 @@ function Servicios() {
     setConfirmModal({
       mensaje: '¿Eliminar esta boleta?',
       onConfirmar: async () => {
-        await window.api.boletas.delete(id)
+        await boletasApi.delete(id)
         setConfirmModal(null)
         loadBoletas(servicioActivo.ID_servicio_prop)
       },

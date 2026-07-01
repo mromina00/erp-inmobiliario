@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { libroDiario as libroDiarioApi, cuentas as cuentasApi, personas as personasApi, catalogos } from '../services/api'
 import SelectorPersona from '../components/SelectorPersona'
 import MontoInput, { parseMonto } from '../components/MontoInput'
 
@@ -38,11 +39,11 @@ function LibroDiario() {
 
   async function loadAll() {
     const [m, c, p, mp, sc] = await Promise.all([
-      window.api.libroDiario.getAll(),
-      window.api.cuentas.getAll(),
-      window.api.personas.getAll(),
-      window.api.catalogos.mediosPago(),
-      window.api.catalogos.subcategoriasFlujo(),
+      libroDiarioApi.getAll(),
+      cuentasApi.getAll(),
+      personasApi.getAll(),
+      catalogos.mediosPago(),
+      catalogos.subcategoriasFlujo(),
     ])
     setMovimientos(m)
     setCuentas(c)
@@ -57,7 +58,7 @@ function LibroDiario() {
     e.preventDefault()
     const montoRaw = parseMonto(form.Monto) || 0
     const monto = form.esEgreso ? -Math.abs(montoRaw) : Math.abs(montoRaw)
-    await window.api.libroDiario.crear({
+    await libroDiarioApi.crear({
       ID_movimiento: 'LD-' + Date.now(),
       Fecha: form.Fecha + 'T00:00:00.000Z',
       ID_cuenta: form.ID_cuenta,
@@ -76,7 +77,7 @@ function LibroDiario() {
   }
 
   async function handleDelete(id) {
-    await window.api.libroDiario.delete(id)
+    await libroDiarioApi.delete(id)
     setConfirmDelete(null)
     loadAll()
   }
@@ -226,11 +227,11 @@ function LibroDiario() {
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <button onClick={async () => {
-                      const result = await window.api.libroDiario.verificar(m.ID_movimiento)
+                      const result = await libroDiarioApi.verificar(m.ID_movimiento)
                       if (result.tieneOrigen) {
                         setConfirmDelete({ id: m.ID_movimiento, tieneOrigen: true, moduloOrigen: result.moduloOrigen })
                       } else {
-                        await window.api.libroDiario.delete(m.ID_movimiento)
+                        await libroDiarioApi.delete(m.ID_movimiento)
                         loadAll()
                       }
                     }}>Eliminar</button>

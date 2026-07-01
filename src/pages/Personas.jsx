@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { personas as personasApi, catalogos } from '../services/api'
 import ConfirmModal from '../components/ConfirmModal'
 
 const emptyForm = {
@@ -43,11 +44,11 @@ function Personas() {
 
   async function loadAll() {
     const [p, td, tp, r, e] = await Promise.all([
-      window.api.personas.getAll(),
-      window.api.catalogos.tiposDocumento(),
-      window.api.catalogos.tiposPersona(),
-      window.api.catalogos.rolesPersona(),
-      window.api.catalogos.estadosPersona(),
+      personasApi.getAll(),
+      catalogos.tiposDocumento(),
+      catalogos.tiposPersona(),
+      catalogos.rolesPersona(),
+      catalogos.estadosPersona(),
     ])
     setPersonas(p)
     setTiposDoc(td)
@@ -105,10 +106,10 @@ function Personas() {
     }
 
     if (editingId) {
-      await window.api.personas.update(editingId, data)
+      await personasApi.update(editingId, data)
     } else {
       const id = 'P-' + Date.now()
-      await window.api.personas.create({ ID_persona: id, ...data })
+      await personasApi.create(data)
     }
     setShowForm(false)
     setForm(emptyForm)
@@ -122,7 +123,7 @@ function Personas() {
     setConfirmModal({
       mensaje: '¿Eliminar esta persona? Esta acción no se puede deshacer.',
       onConfirmar: async () => {
-        await window.api.personas.delete(id)
+        await personasApi.delete(id)
         setConfirmModal(null)
         loadAll()
       },
@@ -257,9 +258,9 @@ function Personas() {
               {personas.map((p) => (
                 <tr key={p.ID_persona}>
                   <td>{p.Nombre}</td>
-                  <td>{p.tipo_doc?.Descripcion} {p.Documento}</td>
-                  <td>{p.rol_persona?.Descripcion}</td>
-                  <td>{p.estado_persona?.Descripcion}</td>
+                  <td>{tiposDoc.find(t => t.ID_tipo_doc === p.ID_tipo_doc)?.Descripcion} {p.Documento}</td>
+                  <td>{roles.find(r => r.ID_rol === p.ID_rol_persona)?.Descripcion}</td>
+                  <td>{estados.find(e => e.ID_estado_persona === p.ID_estado_persona)?.Descripcion}</td>
                   <td style={{ textAlign: 'right' }}>
                     <button onClick={() => startEdit(p)}>Editar</button>{' '}
                     <button onClick={() => handleDelete(p.ID_persona)}>Eliminar</button>

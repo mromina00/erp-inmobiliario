@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ivaCompras as ivaComprasApi, ivaVentas as ivaVentasApi, personas as personasApi, catalogos } from '../services/api'
 import SelectorPersona from '../components/SelectorPersona'
 import MontoInput, { parseMonto } from '../components/MontoInput'
 import ConfirmModal from '../components/ConfirmModal'
@@ -75,10 +76,10 @@ function IVA() {
 
   async function loadAll() {
     const [c, v, p, tc] = await Promise.all([
-      window.api.ivaCompras.getAll(),
-      window.api.ivaVentas.getAll(),
-      window.api.personas.getAll(),
-      window.api.catalogos.tiposComprobante(),
+      ivaComprasApi.getAll(),
+      ivaVentasApi.getAll(),
+      personasApi.getAll(),
+      catalogos.tiposComprobante(),
     ])
     setCompras(c)
     setVentas(v)
@@ -110,9 +111,9 @@ function IVA() {
       Notas: formCompra.Notas || null,
     }
     if (editingCompraId) {
-      await window.api.ivaCompras.update(editingCompraId, data)
+      await ivaComprasApi.update(editingCompraId, data)
     } else {
-      await window.api.ivaCompras.create({ ID_iva_compra: 'IVC-' + Date.now(), ...data })
+      await ivaComprasApi.create(data)
     }
     setShowFormCompra(false)
     setFormCompra(emptyCompra)
@@ -139,9 +140,9 @@ function IVA() {
       Notas: formVenta.Notas || null,
     }
     if (editingVentaId) {
-      await window.api.ivaVentas.update(editingVentaId, data)
+      await ivaVentasApi.update(editingVentaId, data)
     } else {
-      await window.api.ivaVentas.create({ ID_iva_venta: 'IVV-' + Date.now(), ...data })
+      await ivaVentasApi.create(data)
     }
     setShowFormVenta(false)
     setFormVenta(emptyVenta)
@@ -326,7 +327,7 @@ function IVA() {
                       <td>{fmtMoney(c.Total_Facturado)}</td>
                       <td style={{ textAlign: 'right' }}>
                         <button onClick={() => startEditCompra(c)}>Editar</button>{' '}
-                        <button onClick={() => setConfirmModal({ mensaje: '¿Eliminar esta compra?', onConfirmar: async () => { await window.api.ivaCompras.delete(c.ID_iva_compra); setConfirmModal(null); loadAll() } })}>Eliminar</button>
+                        <button onClick={() => setConfirmModal({ mensaje: '¿Eliminar esta compra?', onConfirmar: async () => { await ivaComprasApi.delete(c.ID_iva_compra); setConfirmModal(null); loadAll() } })}>Eliminar</button>
                       </td>
                     </tr>
                   ))}
@@ -438,7 +439,7 @@ function IVA() {
                       <td>{fmtMoney(v.Total_Facturado)}</td>
                       <td style={{ textAlign: 'right' }}>
                         <button onClick={() => startEditVenta(v)}>Editar</button>{' '}
-                        <button onClick={() => setConfirmModal({ mensaje: '¿Eliminar esta venta?', onConfirmar: async () => { await window.api.ivaVentas.delete(v.ID_iva_venta); setConfirmModal(null); loadAll() } })}>Eliminar</button>
+                        <button onClick={() => setConfirmModal({ mensaje: '¿Eliminar esta venta?', onConfirmar: async () => { await ivaVentasApi.delete(v.ID_iva_venta); setConfirmModal(null); loadAll() } })}>Eliminar</button>
                       </td>
                     </tr>
                   ))}

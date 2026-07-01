@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { contratos as contratosApi, periodos as periodosApi, cuentas as cuentasApi, catalogos, cobros as cobrosApi } from '../services/api'
 import { useParams, useNavigate } from 'react-router-dom'
 
 function fmtMoney(n) {
@@ -27,11 +28,11 @@ function DetalleContrato() {
 
   async function loadAll() {
     const [c, p, cu, imp, mp] = await Promise.all([
-      window.api.contratos.getById(id),
-      window.api.periodos.getByContrato(id),
-      window.api.cuentas.getAll(),
-      window.api.catalogos.imputaciones(),
-      window.api.catalogos.mediosPago(),
+      contratosApi.getById(id),
+      periodosApi.getByContrato(id),
+      cuentasApi.getAll(),
+      catalogos.imputaciones(),
+      catalogos.mediosPago(),
     ])
     setContrato(c)
     setPeriodos(p)
@@ -54,7 +55,7 @@ function DetalleContrato() {
   }
 
   async function guardarMontoPeriodo(periodoId) {
-    await window.api.periodos.update(periodoId, {
+    await periodosApi.updateConContrato(id, periodoId, {
       Monto_Alquiler: parseFloat(montoEdit.Monto_Alquiler),
       Monto_Expensas: parseFloat(montoEdit.Monto_Expensas),
       Monto_Cochera: parseFloat(montoEdit.Monto_Cochera || 0),
@@ -96,16 +97,12 @@ function DetalleContrato() {
       alert('Elegí un medio de pago')
       return
     }
-    await window.api.cobros.create({
-      ID_cobro: 'COB-' + Date.now(),
+    await cobrosApi.create({
       ID_periodo_contrato: periodoId,
       Fecha_Pago: cobroForm.Fecha_Pago + 'T00:00:00.000Z',
       Monto_Pagado: parseFloat(cobroForm.Monto_Pagado),
       Imputacion_Pago: cobroForm.Imputacion_Pago,
       ID_cuenta_destino: cobroForm.ID_cuenta_destino,
-      medioPago: cobroForm.ID_medio_pago,
-      personaId: contrato.ID_persona_inquilino,
-      unidadId: contrato.ID_unidad,
     })
     setCobrando(null)
     loadAll()

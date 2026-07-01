@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { cuentas as cuentasApi, personas as personasApi, catalogos } from '../services/api'
 import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
 
@@ -27,10 +28,10 @@ function Cuentas() {
 
   async function loadAll() {
     const [c, t, m, p] = await Promise.all([
-      window.api.cuentas.getAll(),
-      window.api.catalogos.tiposCuenta(),
-      window.api.catalogos.monedas(),
-      window.api.personas.getAll(),
+      cuentasApi.getAll(),
+      catalogos.tiposCuenta(),
+      catalogos.monedas(),
+      personasApi.getAll(),
     ])
     setCuentas(c)
     setTipos(t)
@@ -72,10 +73,10 @@ function Cuentas() {
   async function handleSubmit(e) {
     e.preventDefault()
     if (editingId) {
-      await window.api.cuentas.update(editingId, form)
+      await cuentasApi.update(editingId, form)
     } else {
       const id = 'CTA-' + Date.now()
-      await window.api.cuentas.create({ ID_cuenta: id, ...form })
+      await cuentasApi.create(form)
     }
     setShowForm(false)
     setForm(emptyForm)
@@ -87,7 +88,7 @@ function Cuentas() {
     setConfirmModal({
       mensaje: '¿Eliminar esta cuenta?',
       onConfirmar: async () => {
-        await window.api.cuentas.delete(id)
+        await cuentasApi.delete(id)
         setConfirmModal(null)
         loadAll()
       },

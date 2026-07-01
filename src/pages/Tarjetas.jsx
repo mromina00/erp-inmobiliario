@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { tarjetas as tarjetasApi, gastos as gastosApi, resumenes as resumenesApi, personas as personasApi, cuentas as cuentasApi, catalogos } from '../services/api'
 import AccionesMenu from '../components/AccionesMenu'
 import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
@@ -81,12 +82,12 @@ function Tarjetas() {
 
   async function loadTarjetas() {
     const [t, p, m, c, mp, er] = await Promise.all([
-      window.api.tarjetas.getAll(),
-      window.api.personas.getAll(),
-      window.api.catalogos.marcasTarjeta(),
-      window.api.cuentas.getAll(),
-      window.api.catalogos.mediosPago(),
-      window.api.catalogos.estadosResumen(),
+      tarjetasApi.getAll(),
+      personasApi.getAll(),
+      catalogos.marcasTarjeta(),
+      cuentasApi.getAll(),
+      catalogos.mediosPago(),
+      catalogos.estadosResumen(),
     ])
     setTarjetas(t)
     setPersonas(p)
@@ -98,8 +99,8 @@ function Tarjetas() {
 
   async function loadDetalle(tarjetaId) {
     const [g, r] = await Promise.all([
-      window.api.gastos.getByTarjeta(tarjetaId),
-      window.api.resumenes.getByTarjeta(tarjetaId),
+      gastosApi.getByTarjeta(tarjetaId),
+      resumenesApi.getByTarjeta(tarjetaId),
     ])
     setGastos(g)
     setResumenes(r)
@@ -118,9 +119,9 @@ function Tarjetas() {
       ID_cuenta_debito: formTarjeta.ID_cuenta_debito || null,
     }
     if (editingTarjetaId) {
-      await window.api.tarjetas.update(editingTarjetaId, data)
+      await tarjetasApi.update(editingTarjetaId, data)
     } else {
-      await window.api.tarjetas.create({ ID_tarjeta: 'TAR-' + Date.now(), ...data })
+      await tarjetasApi.create(data)
     }
     setShowFormTarjeta(false)
     setFormTarjeta(emptyTarjeta)
@@ -141,7 +142,7 @@ function Tarjetas() {
       Cuotas_Totales: cuotas,
       Notas: formGasto.Notas || null,
     }
-    await window.api.gastos.create(data, Math.round((monto / cuotas) * 100) / 100)
+    await gastosApi.create(data)
     setShowFormGasto(false)
     setFormGasto(emptyGasto)
     loadDetalle(tarjetaActiva.ID_tarjeta)
@@ -162,7 +163,7 @@ function Tarjetas() {
       ID_estado_resumen: formResumen.ID_estado_resumen,
       Conciliado: false,
     }
-    await window.api.resumenes.create(data)
+    await resumenesApi.create(data)
     setShowFormResumen(false)
     setFormResumen(emptyResumen)
     loadDetalle(tarjetaActiva.ID_tarjeta)
@@ -173,7 +174,7 @@ function Tarjetas() {
       alert('Completá todos los campos de pago')
       return
     }
-    await window.api.resumenes.pagar(
+    await resumenesApi.pagar(
       resumenId,
       pagoForm.cuentaId,
       pagoForm.fecha + 'T00:00:00.000Z',
@@ -189,7 +190,7 @@ async function handleDeleteTarjeta(id) {
     setConfirmModal({
       mensaje: '¿Eliminar esta tarjeta? Se eliminarán también todos sus gastos, cuotas y resúmenes.',
       onConfirmar: async () => {
-        await window.api.tarjetas.delete(id)
+        await tarjetasApi.delete(id)
         setConfirmModal(null)
         loadTarjetas()
       },
@@ -200,7 +201,7 @@ async function handleDeleteTarjeta(id) {
     setConfirmModal({
       mensaje: '¿Eliminar este gasto y todas sus cuotas?',
       onConfirmar: async () => {
-        await window.api.gastos.delete(id)
+        await gastosApi.delete(id)
         setConfirmModal(null)
         loadDetalle(tarjetaActiva.ID_tarjeta)
       },
@@ -209,7 +210,7 @@ async function handleDeleteTarjeta(id) {
 
   async function handleDeleteResumen(id) {
     if (!confirm('¿Eliminar este resumen?')) return
-    await window.api.resumenes.delete(id)
+    await resumenesApi.delete(id)
     loadDetalle(tarjetaActiva.ID_tarjeta)
   }
 

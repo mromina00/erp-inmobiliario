@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { cobros as cobrosApi } from '../services/api'
 
 function fmtMoney(n) {
   if (!n) return '-'
@@ -16,7 +17,7 @@ function CobrosAlquiler() {
   const [filtroMes, setFiltroMes] = useState('')
 
   async function loadAll() {
-    const data = await window.api.cobros.getAll()
+    const data = await cobrosApi.getAll()
     setCobros(data)
   }
 

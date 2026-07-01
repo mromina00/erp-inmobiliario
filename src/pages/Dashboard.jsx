@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { dashboard, vencimientos as vencimientosApi } from '../services/api'
 
 function fmtMoney(n) {
   if (!n) return '$0'
@@ -22,8 +23,8 @@ function Dashboard() {
 
   useEffect(() => {
     Promise.all([
-      window.api.dashboard.getMetrics(),
-      window.api.vencimientos.getProximos(),
+      dashboard.getMetrics(),
+      vencimientosApi.getProximos(),
     ]).then(([m, v]) => {
       setMetrics(m)
       setProximos(v)

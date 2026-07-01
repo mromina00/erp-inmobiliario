@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { contratos as contratosApi, unidades as unidadesApi, personas as personasApi, catalogos } from '../services/api'
 import { useNavigate } from 'react-router-dom'
 import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
@@ -45,12 +46,12 @@ function Contratos() {
 
   async function loadAll() {
     const [c, u, p, e, ti, pe] = await Promise.all([
-      window.api.contratos.getAll(),
-      window.api.unidades.getAll(),
-      window.api.personas.getAll(),
-      window.api.catalogos.estadosContrato(),
-      window.api.catalogos.tiposIndice(),
-      window.api.catalogos.periodicidades(),
+      contratosApi.getAll(),
+      unidadesApi.getAll(),
+      personasApi.getAll(),
+      catalogos.estadosContrato(),
+      catalogos.tiposIndice(),
+      catalogos.periodicidades(),
     ])
     setContratos(c)
     setUnidades(u)
@@ -121,10 +122,10 @@ function Contratos() {
     }
 
     if (editingId) {
-      await window.api.contratos.update(editingId, data, garantesSeleccionados)
+      await contratosApi.update(editingId, data, garantesSeleccionados)
     } else {
       const id = 'C-' + Date.now()
-      await window.api.contratos.create({ ID_contrato: id, ...data }, garantesSeleccionados)
+      await contratosApi.create(data, garantesSeleccionados)
     }
 
     setShowForm(false)
@@ -138,7 +139,7 @@ function Contratos() {
     setConfirmModal({
       mensaje: '¿Eliminar este contrato? Se eliminarán también todos sus períodos y garantes asociados.',
       onConfirmar: async () => {
-        await window.api.contratos.delete(id)
+        await contratosApi.delete(id)
         setConfirmModal(null)
         loadAll()
       },

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { personas as personasApi } from '../services/api'
 
 const rolDefaults = {
   proveedor: { ID_rol: 'PROVEEDOR', ID_tipo_persona: 'JURIDICA', ID_tipo_doc: 'CUIT' },
@@ -60,7 +61,7 @@ function SelectorPersona({ value, onChange, personas, onPersonaCreada, contexto 
       ID_rol_persona: defaults.ID_rol,
       ID_estado_persona: 'ACTIVO',
     }
-    await window.api.personas.create(nueva)
+    await personasApi.create(nueva)
     await onPersonaCreada()
     onChange(id)
     setShowMini(false)

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { vencimientos as vencimientosApi, cuentas as cuentasApi, catalogos, libroDiario as libroDiarioApi } from '../services/api'
 import MontoInput, { parseMonto } from '../components/MontoInput'
 import ConfirmModal from '../components/ConfirmModal'
 
@@ -51,9 +52,9 @@ function Vencimientos() {
 
   async function loadAll() {
     const [v, c, mp] = await Promise.all([
-      window.api.vencimientos.getAll(),
-      window.api.cuentas.getAll(),
-      window.api.catalogos.mediosPago(),
+      vencimientosApi.getAll(),
+      cuentasApi.getAll(),
+      catalogos.mediosPago(),
     ])
     setVencimientos(v)
     setCuentas(c)
@@ -73,9 +74,9 @@ function Vencimientos() {
       Notas: form.Notas || null,
     }
     if (editingId) {
-      await window.api.vencimientos.update(editingId, data)
+      await vencimientosApi.update(editingId, data)
     } else {
-      await window.api.vencimientos.create({ ID_vencimiento: 'VEN-' + Date.now(), ...data })
+      await vencimientosApi.create(data)
     }
     setShowForm(false)
     setForm(emptyForm)
@@ -88,10 +89,10 @@ function Vencimientos() {
     if (!pagoForm.cuentaId) { alert('Elegí una cuenta'); return }
     if (!pagoForm.medio) { alert('Elegí un medio de pago'); return }
 
-    await window.api.vencimientos.marcarPagado(v.ID_vencimiento, pagoForm.fecha + 'T00:00:00.000Z')
+    await vencimientosApi.marcarPagado(v.ID_vencimiento, pagoForm.fecha + 'T00:00:00.000Z')
 
     // Generar movimiento en libro diario
-    await window.api.libroDiario.crear({
+    await libroDiarioApi.crear({
       ID_movimiento: 'LD-' + Date.now(),
       Fecha: pagoForm.fecha + 'T00:00:00.000Z',
       ID_cuenta: pagoForm.cuentaId,
@@ -114,7 +115,7 @@ function Vencimientos() {
     setConfirmModal({
       mensaje: '¿Eliminar este vencimiento?',
       onConfirmar: async () => {
-        await window.api.vencimientos.delete(id)
+        await vencimientosApi.delete(id)
         setConfirmModal(null)
         loadAll()
       },

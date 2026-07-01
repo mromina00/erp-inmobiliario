@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { edificios as edificiosApi } from '../services/api'
 import ConfirmModal from '../components/ConfirmModal'
 
 const emptyForm = { Nombre: '' }
@@ -11,7 +12,7 @@ function Edificios() {
   const [confirmModal, setConfirmModal] = useState(null)
 
   async function load() {
-    const data = await window.api.edificios.getAll()
+    const data = await edificiosApi.getAll()
     setEdificios(data)
   }
 
@@ -38,10 +39,10 @@ function Edificios() {
   async function handleSubmit(e) {
     e.preventDefault()
     if (editingId) {
-      await window.api.edificios.update(editingId, form)
+      await edificiosApi.update(editingId, form)
     } else {
       const id = 'ED-' + Date.now()
-      await window.api.edificios.create({ ID_edificio: id, ...form })
+      await edificiosApi.create(form)
     }
     setShowForm(false)
     setForm(emptyForm)
@@ -53,7 +54,7 @@ function Edificios() {
     setConfirmModal({
       mensaje: '¿Eliminar este edificio?',
       onConfirmar: async () => {
-        await window.api.edificios.delete(id)
+        await edificiosApi.delete(id)
         setConfirmModal(null)
         load()
       },
