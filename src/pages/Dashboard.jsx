@@ -33,7 +33,7 @@ function Dashboard() {
 
   const cards = [
     { label: 'Cobros del mes', value: fmtMoney(metrics.totalCobros) },
-    { label: 'Períodos pendientes', value: metrics.pendientes },
+    { label: 'Períodos pendientes del mes', value: metrics.pendientes },
     { label: 'Contratos vigentes', value: metrics.vigentes },
     { label: 'Vencimientos próximos', value: proximos.length },
   ]

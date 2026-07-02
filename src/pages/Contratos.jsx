@@ -3,13 +3,14 @@ import { contratos as contratosApi, unidades as unidadesApi, personas as persona
 import { useNavigate } from 'react-router-dom'
 import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
+import MontoInput, { parseMonto } from '../components/MontoInput'
 
 const emptyForm = {
   ID_unidad: '',
   ID_persona_inquilino: '',
   ID_persona_firmante: '',
-  Duracion_anos: '',
   Fecha_Inicio: '',
+  Duracion_anos: '',
   Fecha_Vencimiento: '',
   Monto_Alquiler_Inicial: '',
   ID_tipo_indice: '',
@@ -20,9 +21,19 @@ const emptyForm = {
   Notas: '',
 }
 
+function calcularVencimiento(fechaInicio, duracionAnos) {
+  if (!fechaInicio || !duracionAnos) return ''
+  const inicio = new Date(fechaInicio)
+  const venc = new Date(inicio)
+  venc.setFullYear(venc.getFullYear() + parseInt(duracionAnos))
+  venc.setDate(venc.getDate() - 1)
+  return venc.toISOString().substring(0, 10)
+}
+
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
-  return '$' + Number(n).toLocaleString('es-AR')
+  const num = Number(n)
+  return '$' + num.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
 }
 
 function fmtDate(d) {
@@ -66,7 +77,15 @@ function Contratos() {
   }, [])
 
   function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    const updated = { ...form, [name]: value }
+    if (name === 'Fecha_Inicio' || name === 'Duracion_anos') {
+      updated.Fecha_Vencimiento = calcularVencimiento(
+        name === 'Fecha_Inicio' ? value : form.Fecha_Inicio,
+        name === 'Duracion_anos' ? value : form.Duracion_anos
+      )
+    }
+    setForm(updated)
   }
 
   function toggleGarante(personaId) {
@@ -87,14 +106,14 @@ function Contratos() {
       ID_unidad: contrato.ID_unidad || '',
       ID_persona_inquilino: contrato.ID_persona_inquilino || '',
       ID_persona_firmante: contrato.ID_persona_firmante || '',
-      Duracion_anos: contrato.Duracion_anos ?? '',
       Fecha_Inicio: contrato.Fecha_Inicio ? contrato.Fecha_Inicio.substring(0, 10) : '',
+      Duracion_anos: contrato.Duracion_anos ?? '',
       Fecha_Vencimiento: contrato.Fecha_Vencimiento ? contrato.Fecha_Vencimiento.substring(0, 10) : '',
-      Monto_Alquiler_Inicial: contrato.Monto_Alquiler_Inicial ?? '',
+      Monto_Alquiler_Inicial: parseMonto(form.Monto_Alquiler_Inicial),
       ID_tipo_indice: contrato.ID_tipo_indice || '',
       ID_periodicidad: contrato.ID_periodicidad || '',
-      Monto_Expensas_Inicial: contrato.Monto_Expensas_Inicial ?? '',
-      Monto_Cochera_Inicial: contrato.Monto_Cochera_Inicial ?? '',
+      Monto_Expensas_Inicial: parseMonto(form.Monto_Expensas_Inicial) || 0,
+      Monto_Cochera_Inicial: form.Monto_Cochera_Inicial === '' ? null : parseMonto(form.Monto_Cochera_Inicial),
       ID_estado_contrato: contrato.ID_estado_contrato || '',
       Notas: contrato.Notas || '',
     })
@@ -109,8 +128,8 @@ function Contratos() {
       ID_unidad: form.ID_unidad,
       ID_persona_inquilino: form.ID_persona_inquilino,
       ID_persona_firmante: form.ID_persona_firmante || null,
-      Duracion_anos: parseInt(form.Duracion_anos, 10),
       Fecha_Inicio: form.Fecha_Inicio + 'T00:00:00.000Z',
+      Duracion_anos: parseInt(form.Duracion_anos, 10),
       Fecha_Vencimiento: form.Fecha_Vencimiento + 'T00:00:00.000Z',
       Monto_Alquiler_Inicial: parseFloat(form.Monto_Alquiler_Inicial),
       ID_tipo_indice: form.ID_tipo_indice || null,
@@ -190,34 +209,45 @@ function Contratos() {
             />
 
             <label>
-              Duración (años)
-              <input name="Duracion_anos" type="number" value={form.Duracion_anos} onChange={handleChange} required />
-            </label>
-
-            <label>
               Fecha de inicio
               <input name="Fecha_Inicio" type="date" value={form.Fecha_Inicio} onChange={handleChange} required />
             </label>
 
             <label>
-              Fecha de vencimiento
-              <input name="Fecha_Vencimiento" type="date" value={form.Fecha_Vencimiento} onChange={handleChange} required />
+              Duración (años)
+              <input name="Duracion_anos" type="number" value={form.Duracion_anos} onChange={handleChange} required />
             </label>
 
             <label>
-              Monto alquiler inicial
-              <input name="Monto_Alquiler_Inicial" type="number" step="0.01" value={form.Monto_Alquiler_Inicial} onChange={handleChange} required />
+              Fecha de vencimiento (calculada)
+              <input
+                value={form.Fecha_Vencimiento
+                  ? form.Fecha_Vencimiento.split('-').reverse().join('/')
+                  : ''}
+                readOnly
+                style={{ background: '#f5f5f3', cursor: 'not-allowed' }}
+              />
             </label>
 
-            <label>
-              Monto expensas inicial
-              <input name="Monto_Expensas_Inicial" type="number" step="0.01" value={form.Monto_Expensas_Inicial} onChange={handleChange} required />
-            </label>
+            <MontoInput
+              label="Monto alquiler inicial"
+              value={form.Monto_Alquiler_Inicial}
+              onChange={(v) => setForm({ ...form, Monto_Alquiler_Inicial: v })}
+              required
+            />
 
-            <label>
-              Monto cochera inicial
-              <input name="Monto_Cochera_Inicial" type="number" step="0.01" value={form.Monto_Cochera_Inicial} onChange={handleChange} />
-            </label>
+            <MontoInput
+              label="Monto expensas inicial"
+              value={form.Monto_Expensas_Inicial}
+              onChange={(v) => setForm({ ...form, Monto_Expensas_Inicial: v })}
+              required
+            />
+
+            <MontoInput
+              label="Monto cochera inicial"
+              value={form.Monto_Cochera_Inicial}
+              onChange={(v) => setForm({ ...form, Monto_Cochera_Inicial: v })}
+            />
 
             <label>
               Índice de actualización
@@ -311,8 +341,8 @@ function Contratos() {
             <tbody>
               {contratos.map((c) => (
                 <tr key={c.ID_contrato}>
-                  <td>{c.unidad?.Nombre_Unidad}</td>
-                  <td>{c.inquilino?.Nombre}</td>
+                  <td>{unidades.find(u => u.ID_unidad === c.ID_unidad)?.Nombre_Unidad || '-'}</td>
+                  <td>{personas.find(p => p.ID_persona === c.ID_persona_inquilino)?.Nombre || '-'}</td>
                   <td>{fmtDate(c.Fecha_Inicio)}</td>
                   <td>{fmtDate(c.Fecha_Vencimiento)}</td>
                   <td>{fmtMoney(c.Monto_Alquiler_Inicial)}</td>

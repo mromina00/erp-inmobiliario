@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { edificios as edificiosApi } from '../services/api'
 import ConfirmModal from '../components/ConfirmModal'
+import { useNavigate } from 'react-router-dom'
 
-const emptyForm = { Nombre: '' }
+const emptyForm = { Nombre: '', Direccion: '' }
 
 function Edificios() {
   const [edificios, setEdificios] = useState([])
@@ -10,6 +11,7 @@ function Edificios() {
   const [editingId, setEditingId] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [confirmModal, setConfirmModal] = useState(null)
+  const navigate = useNavigate()
 
   async function load() {
     const data = await edificiosApi.getAll()
@@ -34,6 +36,7 @@ function Edificios() {
     setForm({ Nombre: edificio.Nombre })
     setEditingId(edificio.ID_edificio)
     setShowForm(true)
+    setForm({ Nombre: edificio.Nombre, Direccion: edificio.Direccion || '' })
   }
 
   async function handleSubmit(e) {
@@ -64,7 +67,10 @@ function Edificios() {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-        <h1 style={{ margin: 0 }}>Edificios</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button onClick={() => navigate('/unidades')}>← Volver a Unidades</button>
+          <h1 style={{ margin: 0 }}>Edificios</h1>
+        </div>
         <button onClick={startCreate}>+ Nuevo edificio</button>
       </div>
 
@@ -74,6 +80,10 @@ function Edificios() {
           <label>
             Nombre
             <input name="Nombre" value={form.Nombre} onChange={handleChange} required />
+          </label>
+          <label>
+            Dirección del edificio
+            <input name="Direccion" value={form.Direccion} onChange={handleChange} />
           </label>
           <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
             <button type="submit">{editingId ? 'Guardar cambios' : 'Crear edificio'}</button>

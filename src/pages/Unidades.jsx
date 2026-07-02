@@ -18,13 +18,19 @@ const emptyForm = {
 }
 
 function estadoBadge(unidad) {
-  if (unidad.contratos && unidad.contratos.length > 0) {
+  if (unidad.ID_estado === 'OCUPADA') {
     return { label: 'Ocupada', className: 'badge-ok' }
   }
-  if (unidad.estado?.ID_estado_unidad === 'LIBRE') {
+  if (unidad.ID_estado === 'LIBRE') {
     return { label: 'Vacante', className: 'badge-neutral' }
   }
-  return { label: unidad.estado?.Descripcion || 'Sin estado', className: 'badge-neutral' }
+  if (unidad.ID_estado === 'NO_DISPONIBLE') {
+    return { label: 'No disponible', className: 'badge-danger' }
+  }
+  if (unidad.ID_estado === 'USO_PROPIO') {
+    return { label: 'Uso propio', className: 'badge-neutral' }
+  }
+  return { label: unidad.ID_estado || 'Sin estado', className: 'badge-neutral' }
 }
 
 function Unidades() {
@@ -59,7 +65,15 @@ function Unidades() {
   }, [])
 
   function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    const updated = { ...form, [name]: value }
+    if (name === 'ID_edificio' && value) {
+      const edificio = edificios.find(ed => ed.ID_edificio === value)
+      if (edificio?.Direccion) {
+        updated.Direccion = edificio.Direccion
+      }
+    }
+    setForm(updated)
   }
 
   function startCreate() {
@@ -111,7 +125,7 @@ function Unidades() {
 
   async function handleDelete(id) {
     setConfirmModal({
-      mensaje: '¿Eliminar esta unidad? Si tiene contratos asociados, pueden generarse errores.',
+      mensaje: '¿Eliminar esta unidad? Se eliminarán también todos sus contratos, períodos, cobros y servicios asociados. Esta acción no se puede deshacer.',
       onConfirmar: async () => {
         await unidadesApi.delete(id)
         setConfirmModal(null)
@@ -232,7 +246,7 @@ function Unidades() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
                     <p className="unit-name">{u.Nombre_Unidad}</p>
-                    <p className="unit-sub">{u.edificio?.Nombre || 'Propiedad externa'}</p>
+                    <p className="unit-sub">{edificios.find(ed => ed.ID_edificio === u.ID_edificio)?.Nombre || 'Propiedad externa'}</p>
                   </div>
                   <span className={`badge ${badge.className}`}>{badge.label}</span>
                 </div>

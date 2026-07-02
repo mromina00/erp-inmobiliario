@@ -153,7 +153,7 @@ function DetalleContrato() {
                   <td>{fmtMoney(p.Monto_Cochera)}</td>
                   <td>
                     <span className={`badge ${estadoClass[p.ID_estado_periodo] || 'badge-neutral'}`}>
-                      {p.estado_periodo?.Descripcion}
+                      {p.ID_estado_periodo === 'PENDIENTE' ? 'Pendiente' : p.ID_estado_periodo === 'PAGADO' ? 'Pagado' : p.ID_estado_periodo === 'EN_MORA' ? 'En mora' : p.ID_estado_periodo}
                     </span>
                   </td>
                   <td style={{ textAlign: 'right' }}>
