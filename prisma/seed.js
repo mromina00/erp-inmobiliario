@@ -10,22 +10,17 @@ const adapter = new PrismaBetterSqlite3({ url: `file:${dbPath}` })
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  await prisma.tipo_comprobante.createMany({
+  await prisma.estados_vencimiento.createMany({
     data: [
-      { ID_tipo_comprobante: 'FACTURA_A', Descripcion: 'Factura A' },
-      { ID_tipo_comprobante: 'FACTURA_B', Descripcion: 'Factura B' },
-      { ID_tipo_comprobante: 'FACTURA_C', Descripcion: 'Factura C' },
+      { ID_estado_vencimiento: 'PENDIENTE', Descripcion: 'Pendiente' },
+      { ID_estado_vencimiento: 'PAGADO', Descripcion: 'Pagado' },
+      { ID_estado_vencimiento: 'VENCIDO', Descripcion: 'Vencido' },
     ],
   })
 
-  console.log('Catálogos de IVA cargados correctamente')
+  console.log('Catálogos de vencimientos cargados correctamente')
 }
 
 main()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
-  })
-  .finally(async () => {
-    process.exit(0)
-  })
+  .catch((e) => { console.error(e); process.exit(1) })
+  .finally(async () => { process.exit(0) })

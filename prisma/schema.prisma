@@ -533,7 +533,7 @@ model libro_diario {
   ID_movimiento         String   @id
   Fecha                 DateTime
   ID_cuenta             String
-  ID_persona_entidad    String
+  ID_persona_entidad    String?
   ID_unidad             String?
   ID_resumen_tarjeta    String?
   Detalle               String
@@ -546,7 +546,7 @@ model libro_diario {
   Notas                 String?
 
   cuenta          cuentas             @relation(fields: [ID_cuenta], references: [ID_cuenta])
-  persona_entidad personas            @relation(fields: [ID_persona_entidad], references: [ID_persona])
+  persona_entidad personas?            @relation(fields: [ID_persona_entidad], references: [ID_persona])
   unidad          unidades?           @relation(fields: [ID_unidad], references: [ID_unidad])
   resumen_tarjeta resumenes_tarjeta?  @relation(fields: [ID_resumen_tarjeta], references: [ID_resumen])
   medio_pago      medios_pago         @relation(fields: [ID_medio_pago], references: [ID_medio])

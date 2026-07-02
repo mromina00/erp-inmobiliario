@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { personas as personasApi, catalogos } from '../services/api'
+import ConfirmModal from '../components/ConfirmModal'
 
 const emptyForm = {
   ID_persona: '',
@@ -12,8 +14,22 @@ const emptyForm = {
   Provincia: '',
   Telefono: '',
   Email: '',
-  ID_estado_persona: '',
+  ID_estado_persona: 'ACTIVO',
   Notas: '',
+}
+
+function formatDocumento(value, tipo) {
+  const digits = value.replace(/\D/g, '')
+  if (tipo === 'CUIT') {
+    if (digits.length <= 2) return digits
+    if (digits.length <= 10) return `${digits.slice(0, 2)}-${digits.slice(2)}`
+    return `${digits.slice(0, 2)}-${digits.slice(2, 10)}-${digits.slice(10, 11)}`
+  } else if (tipo === 'DNI') {
+    if (digits.length <= 2) return digits
+    if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`
+    return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}`
+  }
+  return value
 }
 
 function Personas() {
@@ -28,11 +44,11 @@ function Personas() {
 
   async function loadAll() {
     const [p, td, tp, r, e] = await Promise.all([
-      window.api.personas.getAll(),
-      window.api.catalogos.tiposDocumento(),
-      window.api.catalogos.tiposPersona(),
-      window.api.catalogos.rolesPersona(),
-      window.api.catalogos.estadosPersona(),
+      personasApi.getAll(),
+      catalogos.tiposDocumento(),
+      catalogos.tiposPersona(),
+      catalogos.rolesPersona(),
+      catalogos.estadosPersona(),
     ])
     setPersonas(p)
     setTiposDoc(td)
@@ -41,12 +57,17 @@ function Personas() {
     setEstados(e)
   }
 
-  useEffect(() => {
-    loadAll()
-  }, [])
+  useEffect(() => { loadAll() }, [])
 
   function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, value } = e.target
+    if (name === 'Documento') {
+      setForm({ ...form, Documento: formatDocumento(value, form.ID_tipo_doc) })
+    } else if (name === 'ID_tipo_doc') {
+      setForm({ ...form, ID_tipo_doc: value, Documento: '' })
+    } else {
+      setForm({ ...form, [name]: value })
+    }
   }
 
   function startCreate() {
@@ -68,7 +89,7 @@ function Personas() {
       Provincia: persona.Provincia || '',
       Telefono: persona.Telefono || '',
       Email: persona.Email || '',
-      ID_estado_persona: persona.ID_estado_persona || '',
+      ID_estado_persona: persona.ID_estado_persona || 'ACTIVO',
       Notas: persona.Notas || '',
     })
     setEditingId(persona.ID_persona)
@@ -79,25 +100,37 @@ function Personas() {
     e.preventDefault()
     const data = { ...form }
     delete data.ID_persona
-
-    if (editingId) {
-      await window.api.personas.update(editingId, data)
-    } else {
-      const id = 'P-' + Date.now()
-      await window.api.personas.create({ ID_persona: id, ...data })
+    // Si no es inquilino, forzamos ACTIVO
+    if (form.ID_rol_persona !== 'INQUILINO') {
+      data.ID_estado_persona = 'ACTIVO'
     }
 
+    if (editingId) {
+      await personasApi.update(editingId, data)
+    } else {
+      const id = 'P-' + Date.now()
+      await personasApi.create(data)
+    }
     setShowForm(false)
     setForm(emptyForm)
     setEditingId(null)
     loadAll()
   }
 
+  const [confirmModal, setConfirmModal] = useState(null)
+
   async function handleDelete(id) {
-    if (!confirm('¿Eliminar esta persona?')) return
-    await window.api.personas.delete(id)
-    loadAll()
+    setConfirmModal({
+      mensaje: '¿Eliminar esta persona? Esta acción no se puede deshacer.',
+      onConfirmar: async () => {
+        await personasApi.delete(id)
+        setConfirmModal(null)
+        loadAll()
+      },
+    })
   }
+
+  const esInquilino = form.ID_rol_persona === 'INQUILINO'
 
   return (
     <div>
@@ -128,7 +161,12 @@ function Personas() {
 
             <label>
               Número de documento
-              <input name="Documento" value={form.Documento} onChange={handleChange} />
+              <input
+                name="Documento"
+                value={form.Documento}
+                onChange={handleChange}
+                placeholder={form.ID_tipo_doc === 'CUIT' ? 'XX-XXXXXXXX-X' : form.ID_tipo_doc === 'DNI' ? 'XX.XXX.XXX' : ''}
+              />
             </label>
 
             <label>
@@ -151,15 +189,17 @@ function Personas() {
               </select>
             </label>
 
-            <label>
-              Estado
-              <select name="ID_estado_persona" value={form.ID_estado_persona} onChange={handleChange} required>
-                <option value="">Seleccionar...</option>
-                {estados.map((e) => (
-                  <option key={e.ID_estado_persona} value={e.ID_estado_persona}>{e.Descripcion}</option>
-                ))}
-              </select>
-            </label>
+            {esInquilino && (
+              <label>
+                Estado
+                <select name="ID_estado_persona" value={form.ID_estado_persona} onChange={handleChange} required>
+                  <option value="">Seleccionar...</option>
+                  {estados.map((e) => (
+                    <option key={e.ID_estado_persona} value={e.ID_estado_persona}>{e.Descripcion}</option>
+                  ))}
+                </select>
+              </label>
+            )}
 
             <label>
               Teléfono
@@ -218,9 +258,9 @@ function Personas() {
               {personas.map((p) => (
                 <tr key={p.ID_persona}>
                   <td>{p.Nombre}</td>
-                  <td>{p.tipo_doc?.Descripcion} {p.Documento}</td>
-                  <td>{p.rol_persona?.Descripcion}</td>
-                  <td>{p.estado_persona?.Descripcion}</td>
+                  <td>{tiposDoc.find(t => t.ID_tipo_doc === p.ID_tipo_doc)?.Descripcion} {p.Documento}</td>
+                  <td>{roles.find(r => r.ID_rol === p.ID_rol_persona)?.Descripcion}</td>
+                  <td>{estados.find(e => e.ID_estado_persona === p.ID_estado_persona)?.Descripcion}</td>
                   <td style={{ textAlign: 'right' }}>
                     <button onClick={() => startEdit(p)}>Editar</button>{' '}
                     <button onClick={() => handleDelete(p.ID_persona)}>Eliminar</button>
@@ -231,6 +271,14 @@ function Personas() {
           </table>
         )}
       </div>
+      {confirmModal && (
+        <ConfirmModal
+          mensaje={confirmModal.mensaje}
+          onConfirmar={confirmModal.onConfirmar}
+          onCancelar={() => setConfirmModal(null)}
+          peligroso
+        />
+      )}
     </div>
   )
 }

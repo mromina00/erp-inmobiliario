@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
+import { contratos as contratosApi, unidades as unidadesApi, personas as personasApi, catalogos } from '../services/api'
 import { useNavigate } from 'react-router-dom'
+import SelectorPersona from '../components/SelectorPersona'
+import ConfirmModal from '../components/ConfirmModal'
 
 const emptyForm = {
   ID_unidad: '',
@@ -39,15 +42,16 @@ function Contratos() {
   const [garantesSeleccionados, setGarantesSeleccionados] = useState([])
   const [editingId, setEditingId] = useState(null)
   const [showForm, setShowForm] = useState(false)
+  const [confirmModal, setConfirmModal] = useState(null)
 
   async function loadAll() {
     const [c, u, p, e, ti, pe] = await Promise.all([
-      window.api.contratos.getAll(),
-      window.api.unidades.getAll(),
-      window.api.personas.getAll(),
-      window.api.catalogos.estadosContrato(),
-      window.api.catalogos.tiposIndice(),
-      window.api.catalogos.periodicidades(),
+      contratosApi.getAll(),
+      unidadesApi.getAll(),
+      personasApi.getAll(),
+      catalogos.estadosContrato(),
+      catalogos.tiposIndice(),
+      catalogos.periodicidades(),
     ])
     setContratos(c)
     setUnidades(u)
@@ -118,10 +122,10 @@ function Contratos() {
     }
 
     if (editingId) {
-      await window.api.contratos.update(editingId, data, garantesSeleccionados)
+      await contratosApi.update(editingId, data, garantesSeleccionados)
     } else {
       const id = 'C-' + Date.now()
-      await window.api.contratos.create({ ID_contrato: id, ...data }, garantesSeleccionados)
+      await contratosApi.create(data, garantesSeleccionados)
     }
 
     setShowForm(false)
@@ -132,9 +136,14 @@ function Contratos() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('¿Eliminar este contrato?')) return
-    await window.api.contratos.delete(id)
-    loadAll()
+    setConfirmModal({
+      mensaje: '¿Eliminar este contrato? Se eliminarán también todos sus períodos y garantes asociados.',
+      onConfirmar: async () => {
+        await contratosApi.delete(id)
+        setConfirmModal(null)
+        loadAll()
+      },
+    })
   }
 
   return (
@@ -161,25 +170,24 @@ function Contratos() {
               </select>
             </label>
 
-            <label>
-              Inquilino
-              <select name="ID_persona_inquilino" value={form.ID_persona_inquilino} onChange={handleChange} required>
-                <option value="">Seleccionar...</option>
-                {personas.map((p) => (
-                  <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>
-                ))}
-              </select>
-            </label>
+            <SelectorPersona
+              label="Inquilino"
+              value={form.ID_persona_inquilino}
+              onChange={(v) => setForm({ ...form, ID_persona_inquilino: v })}
+              personas={personas}
+              onPersonaCreada={loadAll}
+              contexto="inquilino"
+              required
+            />
 
-            <label>
-              Firmante (si es distinto al inquilino)
-              <select name="ID_persona_firmante" value={form.ID_persona_firmante} onChange={handleChange}>
-                <option value="">Mismo que inquilino</option>
-                {personas.map((p) => (
-                  <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>
-                ))}
-              </select>
-            </label>
+            <SelectorPersona
+              label="Firmante (si es distinto al inquilino)"
+              value={form.ID_persona_firmante}
+              onChange={(v) => setForm({ ...form, ID_persona_firmante: v })}
+              personas={personas}
+              onPersonaCreada={loadAll}
+              contexto="firmante"
+            />
 
             <label>
               Duración (años)
@@ -320,6 +328,14 @@ function Contratos() {
           </table>
         )}
       </div>
+      {confirmModal && (
+        <ConfirmModal
+          mensaje={confirmModal.mensaje}
+          onConfirmar={confirmModal.onConfirmar}
+          onCancelar={() => setConfirmModal(null)}
+          peligroso
+        />
+      )}
     </div>
   )
 }

@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react'
+import { cuentas as cuentasApi, personas as personasApi, catalogos } from '../services/api'
+import SelectorPersona from '../components/SelectorPersona'
+import ConfirmModal from '../components/ConfirmModal'
 
 const emptyForm = {
   Nombre_Cuenta: '',
@@ -21,13 +24,14 @@ function Cuentas() {
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
   const [showForm, setShowForm] = useState(false)
+  const [confirmModal, setConfirmModal] = useState(null)
 
   async function loadAll() {
     const [c, t, m, p] = await Promise.all([
-      window.api.cuentas.getAll(),
-      window.api.catalogos.tiposCuenta(),
-      window.api.catalogos.monedas(),
-      window.api.personas.getAll(),
+      cuentasApi.getAll(),
+      catalogos.tiposCuenta(),
+      catalogos.monedas(),
+      personasApi.getAll(),
     ])
     setCuentas(c)
     setTipos(t)
@@ -69,10 +73,10 @@ function Cuentas() {
   async function handleSubmit(e) {
     e.preventDefault()
     if (editingId) {
-      await window.api.cuentas.update(editingId, form)
+      await cuentasApi.update(editingId, form)
     } else {
       const id = 'CTA-' + Date.now()
-      await window.api.cuentas.create({ ID_cuenta: id, ...form })
+      await cuentasApi.create(form)
     }
     setShowForm(false)
     setForm(emptyForm)
@@ -81,9 +85,14 @@ function Cuentas() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('¿Eliminar esta cuenta?')) return
-    await window.api.cuentas.delete(id)
-    loadAll()
+    setConfirmModal({
+      mensaje: '¿Eliminar esta cuenta?',
+      onConfirmar: async () => {
+        await cuentasApi.delete(id)
+        setConfirmModal(null)
+        loadAll()
+      },
+    })
   }
 
   return (
@@ -119,15 +128,15 @@ function Cuentas() {
                 ))}
               </select>
             </label>
-            <label>
-              Titular
-              <select name="ID_persona_titular" value={form.ID_persona_titular} onChange={handleChange} required>
-                <option value="">Seleccionar...</option>
-                {personas.map((p) => (
-                  <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>
-                ))}
-              </select>
-            </label>
+            <SelectorPersona
+              label="Titular"
+              value={form.ID_persona_titular}
+              onChange={(v) => setForm({ ...form, ID_persona_titular: v })}
+              personas={personas}
+              onPersonaCreada={loadAll}
+              contexto="titular"
+              required
+            />
             <label>
               Banco / Institución
               <input name="Banco_Institucion" value={form.Banco_Institucion} onChange={handleChange} />
@@ -188,6 +197,14 @@ function Cuentas() {
           </table>
         )}
       </div>
+      {confirmModal && (
+        <ConfirmModal
+          mensaje={confirmModal.mensaje}
+          onConfirmar={confirmModal.onConfirmar}
+          onCancelar={() => setConfirmModal(null)}
+          peligroso
+        />
+      )}
     </div>
   )
 }

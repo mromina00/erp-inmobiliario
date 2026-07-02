@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react'
+import { ivaCompras as ivaComprasApi, ivaVentas as ivaVentasApi, personas as personasApi, catalogos } from '../services/api'
+import SelectorPersona from '../components/SelectorPersona'
+import MontoInput, { parseMonto } from '../components/MontoInput'
+import ConfirmModal from '../components/ConfirmModal'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -10,10 +14,15 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString('es-AR')
 }
 
+function formatFactura(value) {
+  const digits = value.replace(/\D/g, '')
+  if (digits.length <= 4) return digits
+  return `${digits.slice(0, 4)}-${digits.slice(4, 12)}`
+}
+
 const emptyCompra = {
   ID_persona_empresa: '',
   ID_persona_proveedor: '',
-  Fecha_Registro: '',
   Fecha_Factura: '',
   ID_tipo_comprobante: '',
   Factura_Numero: '',
@@ -25,14 +34,12 @@ const emptyCompra = {
   Retencion_IVA: '',
   Retencion_Ganancias: '',
   Retencion_IIBB: '',
-  Total_Facturado: '',
   Notas: '',
 }
 
 const emptyVenta = {
   ID_persona_empresa: '',
   ID_persona_cliente: '',
-  Fecha_Registro: '',
   Fecha_Factura: '',
   ID_tipo_comprobante: '',
   Factura_Numero: '',
@@ -41,12 +48,14 @@ const emptyVenta = {
   Neto_Gravado_105: '',
   IVA_105: '',
   Monto_No_Gravado_Exento: '',
-  Total_Facturado: '',
   Notas: '',
 }
 
-function parseDecimal(v) {
-  return v === '' || v === null || v === undefined ? null : parseFloat(v)
+function calcularTotal(form, esCompra = true) {
+  const campos = esCompra
+    ? ['Neto_Gravado_21', 'IVA_21', 'Neto_Gravado_105', 'IVA_105', 'Monto_No_Gravado_Exento', 'Retencion_IVA', 'Retencion_Ganancias', 'Retencion_IIBB']
+    : ['Neto_Gravado_21', 'IVA_21', 'Neto_Gravado_105', 'IVA_105', 'Monto_No_Gravado_Exento']
+  return campos.reduce((acc, k) => acc + (parseMonto(form[k]) || 0), 0)
 }
 
 function IVA() {
@@ -63,13 +72,14 @@ function IVA() {
   const [formVenta, setFormVenta] = useState(emptyVenta)
   const [editingVentaId, setEditingVentaId] = useState(null)
   const [showFormVenta, setShowFormVenta] = useState(false)
+  const [confirmModal, setConfirmModal] = useState(null)
 
   async function loadAll() {
     const [c, v, p, tc] = await Promise.all([
-      window.api.ivaCompras.getAll(),
-      window.api.ivaVentas.getAll(),
-      window.api.personas.getAll(),
-      window.api.catalogos.tiposComprobante(),
+      ivaComprasApi.getAll(),
+      ivaVentasApi.getAll(),
+      personasApi.getAll(),
+      catalogos.tiposComprobante(),
     ])
     setCompras(c)
     setVentas(v)
@@ -77,30 +87,33 @@ function IVA() {
     setTiposComprobante(tc)
   }
 
-  useEffect(() => {
-    loadAll()
-  }, [])
+  useEffect(() => { loadAll() }, [])
 
   async function handleSubmitCompra(e) {
     e.preventDefault()
+    const total = calcularTotal(formCompra, true)
     const data = {
-      ...formCompra,
-      Fecha_Registro: formCompra.Fecha_Registro + 'T00:00:00.000Z',
+      ID_persona_empresa: formCompra.ID_persona_empresa,
+      ID_persona_proveedor: formCompra.ID_persona_proveedor,
+      Fecha_Registro: new Date().toISOString(),
       Fecha_Factura: formCompra.Fecha_Factura + 'T00:00:00.000Z',
-      Neto_Gravado_21: parseDecimal(formCompra.Neto_Gravado_21),
-      IVA_21: parseDecimal(formCompra.IVA_21),
-      Neto_Gravado_105: parseDecimal(formCompra.Neto_Gravado_105),
-      IVA_105: parseDecimal(formCompra.IVA_105),
-      Monto_No_Gravado_Exento: parseDecimal(formCompra.Monto_No_Gravado_Exento),
-      Retencion_IVA: parseDecimal(formCompra.Retencion_IVA),
-      Retencion_Ganancias: parseDecimal(formCompra.Retencion_Ganancias),
-      Retencion_IIBB: parseDecimal(formCompra.Retencion_IIBB),
-      Total_Facturado: parseFloat(formCompra.Total_Facturado),
+      ID_tipo_comprobante: formCompra.ID_tipo_comprobante,
+      Factura_Numero: formCompra.Factura_Numero,
+      Neto_Gravado_21: parseMonto(formCompra.Neto_Gravado_21),
+      IVA_21: parseMonto(formCompra.IVA_21),
+      Neto_Gravado_105: parseMonto(formCompra.Neto_Gravado_105),
+      IVA_105: parseMonto(formCompra.IVA_105),
+      Monto_No_Gravado_Exento: parseMonto(formCompra.Monto_No_Gravado_Exento),
+      Retencion_IVA: parseMonto(formCompra.Retencion_IVA),
+      Retencion_Ganancias: parseMonto(formCompra.Retencion_Ganancias),
+      Retencion_IIBB: parseMonto(formCompra.Retencion_IIBB),
+      Total_Facturado: total,
+      Notas: formCompra.Notas || null,
     }
     if (editingCompraId) {
-      await window.api.ivaCompras.update(editingCompraId, data)
+      await ivaComprasApi.update(editingCompraId, data)
     } else {
-      await window.api.ivaCompras.create({ ID_iva_compra: 'IVC-' + Date.now(), ...data })
+      await ivaComprasApi.create(data)
     }
     setShowFormCompra(false)
     setFormCompra(emptyCompra)
@@ -110,21 +123,26 @@ function IVA() {
 
   async function handleSubmitVenta(e) {
     e.preventDefault()
+    const total = calcularTotal(formVenta, false)
     const data = {
-      ...formVenta,
-      Fecha_Registro: formVenta.Fecha_Registro + 'T00:00:00.000Z',
+      ID_persona_empresa: formVenta.ID_persona_empresa,
+      ID_persona_cliente: formVenta.ID_persona_cliente,
+      Fecha_Registro: new Date().toISOString(),
       Fecha_Factura: formVenta.Fecha_Factura + 'T00:00:00.000Z',
-      Neto_Gravado_21: parseDecimal(formVenta.Neto_Gravado_21),
-      IVA_21: parseDecimal(formVenta.IVA_21),
-      Neto_Gravado_105: parseDecimal(formVenta.Neto_Gravado_105),
-      IVA_105: parseDecimal(formVenta.IVA_105),
-      Monto_No_Gravado_Exento: parseDecimal(formVenta.Monto_No_Gravado_Exento),
-      Total_Facturado: parseFloat(formVenta.Total_Facturado),
+      ID_tipo_comprobante: formVenta.ID_tipo_comprobante,
+      Factura_Numero: formVenta.Factura_Numero,
+      Neto_Gravado_21: parseMonto(formVenta.Neto_Gravado_21),
+      IVA_21: parseMonto(formVenta.IVA_21),
+      Neto_Gravado_105: parseMonto(formVenta.Neto_Gravado_105),
+      IVA_105: parseMonto(formVenta.IVA_105),
+      Monto_No_Gravado_Exento: parseMonto(formVenta.Monto_No_Gravado_Exento),
+      Total_Facturado: total,
+      Notas: formVenta.Notas || null,
     }
     if (editingVentaId) {
-      await window.api.ivaVentas.update(editingVentaId, data)
+      await ivaVentasApi.update(editingVentaId, data)
     } else {
-      await window.api.ivaVentas.create({ ID_iva_venta: 'IVV-' + Date.now(), ...data })
+      await ivaVentasApi.create(data)
     }
     setShowFormVenta(false)
     setFormVenta(emptyVenta)
@@ -136,19 +154,17 @@ function IVA() {
     setFormCompra({
       ID_persona_empresa: c.ID_persona_empresa || '',
       ID_persona_proveedor: c.ID_persona_proveedor || '',
-      Fecha_Registro: c.Fecha_Registro?.substring(0, 10) || '',
       Fecha_Factura: c.Fecha_Factura?.substring(0, 10) || '',
       ID_tipo_comprobante: c.ID_tipo_comprobante || '',
       Factura_Numero: c.Factura_Numero || '',
-      Neto_Gravado_21: c.Neto_Gravado_21 ?? '',
-      IVA_21: c.IVA_21 ?? '',
-      Neto_Gravado_105: c.Neto_Gravado_105 ?? '',
-      IVA_105: c.IVA_105 ?? '',
-      Monto_No_Gravado_Exento: c.Monto_No_Gravado_Exento ?? '',
-      Retencion_IVA: c.Retencion_IVA ?? '',
-      Retencion_Ganancias: c.Retencion_Ganancias ?? '',
-      Retencion_IIBB: c.Retencion_IIBB ?? '',
-      Total_Facturado: c.Total_Facturado ?? '',
+      Neto_Gravado_21: c.Neto_Gravado_21 ? Number(c.Neto_Gravado_21).toLocaleString('es-AR') : '',
+      IVA_21: c.IVA_21 ? Number(c.IVA_21).toLocaleString('es-AR') : '',
+      Neto_Gravado_105: c.Neto_Gravado_105 ? Number(c.Neto_Gravado_105).toLocaleString('es-AR') : '',
+      IVA_105: c.IVA_105 ? Number(c.IVA_105).toLocaleString('es-AR') : '',
+      Monto_No_Gravado_Exento: c.Monto_No_Gravado_Exento ? Number(c.Monto_No_Gravado_Exento).toLocaleString('es-AR') : '',
+      Retencion_IVA: c.Retencion_IVA ? Number(c.Retencion_IVA).toLocaleString('es-AR') : '',
+      Retencion_Ganancias: c.Retencion_Ganancias ? Number(c.Retencion_Ganancias).toLocaleString('es-AR') : '',
+      Retencion_IIBB: c.Retencion_IIBB ? Number(c.Retencion_IIBB).toLocaleString('es-AR') : '',
       Notas: c.Notas || '',
     })
     setEditingCompraId(c.ID_iva_compra)
@@ -159,16 +175,14 @@ function IVA() {
     setFormVenta({
       ID_persona_empresa: v.ID_persona_empresa || '',
       ID_persona_cliente: v.ID_persona_cliente || '',
-      Fecha_Registro: v.Fecha_Registro?.substring(0, 10) || '',
       Fecha_Factura: v.Fecha_Factura?.substring(0, 10) || '',
       ID_tipo_comprobante: v.ID_tipo_comprobante || '',
       Factura_Numero: v.Factura_Numero || '',
-      Neto_Gravado_21: v.Neto_Gravado_21 ?? '',
-      IVA_21: v.IVA_21 ?? '',
-      Neto_Gravado_105: v.Neto_Gravado_105 ?? '',
-      IVA_105: v.IVA_105 ?? '',
-      Monto_No_Gravado_Exento: v.Monto_No_Gravado_Exento ?? '',
-      Total_Facturado: v.Total_Facturado ?? '',
+      Neto_Gravado_21: v.Neto_Gravado_21 ? Number(v.Neto_Gravado_21).toLocaleString('es-AR') : '',
+      IVA_21: v.IVA_21 ? Number(v.IVA_21).toLocaleString('es-AR') : '',
+      Neto_Gravado_105: v.Neto_Gravado_105 ? Number(v.Neto_Gravado_105).toLocaleString('es-AR') : '',
+      IVA_105: v.IVA_105 ? Number(v.IVA_105).toLocaleString('es-AR') : '',
+      Monto_No_Gravado_Exento: v.Monto_No_Gravado_Exento ? Number(v.Monto_No_Gravado_Exento).toLocaleString('es-AR') : '',
       Notas: v.Notas || '',
     })
     setEditingVentaId(v.ID_iva_venta)
@@ -178,6 +192,8 @@ function IVA() {
   const totalIVACompras = compras.reduce((acc, c) => acc + Number(c.IVA_21 || 0) + Number(c.IVA_105 || 0), 0)
   const totalIVAVentas = ventas.reduce((acc, v) => acc + Number(v.IVA_21 || 0) + Number(v.IVA_105 || 0), 0)
   const saldoIVA = totalIVAVentas - totalIVACompras
+  const totalCompra = calcularTotal(formCompra, true)
+  const totalVenta = calcularTotal(formVenta, false)
 
   return (
     <div>
@@ -219,20 +235,24 @@ function IVA() {
             <form onSubmit={handleSubmitCompra} className="card" style={{ marginBottom: '1.5rem' }}>
               <p className="card-title">{editingCompraId ? 'Editar compra' : 'Nueva compra'}</p>
               <div className="form-grid">
-                <label>
-                  Empresa (nuestra S.A.)
-                  <select value={formCompra.ID_persona_empresa} onChange={(e) => setFormCompra({ ...formCompra, ID_persona_empresa: e.target.value })} required>
-                    <option value="">Seleccionar...</option>
-                    {personas.map((p) => <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>)}
-                  </select>
-                </label>
-                <label>
-                  Proveedor
-                  <select value={formCompra.ID_persona_proveedor} onChange={(e) => setFormCompra({ ...formCompra, ID_persona_proveedor: e.target.value })} required>
-                    <option value="">Seleccionar...</option>
-                    {personas.map((p) => <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>)}
-                  </select>
-                </label>
+                <SelectorPersona
+                  label="Empresa (nuestra S.A.)"
+                  value={formCompra.ID_persona_empresa}
+                  onChange={(v) => setFormCompra({ ...formCompra, ID_persona_empresa: v })}
+                  personas={personas}
+                  onPersonaCreada={loadAll}
+                  contexto="empresa"
+                  required
+                />
+                <SelectorPersona
+                  label="Proveedor"
+                  value={formCompra.ID_persona_proveedor}
+                  onChange={(v) => setFormCompra({ ...formCompra, ID_persona_proveedor: v })}
+                  personas={personas}
+                  onPersonaCreada={loadAll}
+                  contexto="proveedor"
+                  required
+                />
                 <label>
                   Tipo de comprobante
                   <select value={formCompra.ID_tipo_comprobante} onChange={(e) => setFormCompra({ ...formCompra, ID_tipo_comprobante: e.target.value })} required>
@@ -242,52 +262,29 @@ function IVA() {
                 </label>
                 <label>
                   Número de factura
-                  <input value={formCompra.Factura_Numero} onChange={(e) => setFormCompra({ ...formCompra, Factura_Numero: e.target.value })} required />
+                  <input
+                    value={formCompra.Factura_Numero}
+                    onChange={(e) => setFormCompra({ ...formCompra, Factura_Numero: formatFactura(e.target.value) })}
+                    placeholder="0000-00000000"
+                    required
+                  />
                 </label>
                 <label>
                   Fecha de factura
                   <input type="date" value={formCompra.Fecha_Factura} onChange={(e) => setFormCompra({ ...formCompra, Fecha_Factura: e.target.value })} required />
                 </label>
-                <label>
-                  Fecha de registro
-                  <input type="date" value={formCompra.Fecha_Registro} onChange={(e) => setFormCompra({ ...formCompra, Fecha_Registro: e.target.value })} required />
-                </label>
-                <label>
-                  Neto gravado 21%
-                  <input type="number" step="0.01" value={formCompra.Neto_Gravado_21} onChange={(e) => setFormCompra({ ...formCompra, Neto_Gravado_21: e.target.value })} />
-                </label>
-                <label>
-                  IVA 21%
-                  <input type="number" step="0.01" value={formCompra.IVA_21} onChange={(e) => setFormCompra({ ...formCompra, IVA_21: e.target.value })} />
-                </label>
-                <label>
-                  Neto gravado 10.5%
-                  <input type="number" step="0.01" value={formCompra.Neto_Gravado_105} onChange={(e) => setFormCompra({ ...formCompra, Neto_Gravado_105: e.target.value })} />
-                </label>
-                <label>
-                  IVA 10.5%
-                  <input type="number" step="0.01" value={formCompra.IVA_105} onChange={(e) => setFormCompra({ ...formCompra, IVA_105: e.target.value })} />
-                </label>
-                <label>
-                  No gravado / Exento
-                  <input type="number" step="0.01" value={formCompra.Monto_No_Gravado_Exento} onChange={(e) => setFormCompra({ ...formCompra, Monto_No_Gravado_Exento: e.target.value })} />
-                </label>
-                <label>
-                  Retención IVA
-                  <input type="number" step="0.01" value={formCompra.Retencion_IVA} onChange={(e) => setFormCompra({ ...formCompra, Retencion_IVA: e.target.value })} />
-                </label>
-                <label>
-                  Retención Ganancias
-                  <input type="number" step="0.01" value={formCompra.Retencion_Ganancias} onChange={(e) => setFormCompra({ ...formCompra, Retencion_Ganancias: e.target.value })} />
-                </label>
-                <label>
-                  Retención IIBB
-                  <input type="number" step="0.01" value={formCompra.Retencion_IIBB} onChange={(e) => setFormCompra({ ...formCompra, Retencion_IIBB: e.target.value })} />
-                </label>
-                <label>
-                  Total facturado
-                  <input type="number" step="0.01" value={formCompra.Total_Facturado} onChange={(e) => setFormCompra({ ...formCompra, Total_Facturado: e.target.value })} required />
-                </label>
+                <MontoInput label="Neto gravado 21%" value={formCompra.Neto_Gravado_21} onChange={(v) => setFormCompra({ ...formCompra, Neto_Gravado_21: v })} />
+                <MontoInput label="IVA 21%" value={formCompra.IVA_21} onChange={(v) => setFormCompra({ ...formCompra, IVA_21: v })} />
+                <MontoInput label="Neto gravado 10.5%" value={formCompra.Neto_Gravado_105} onChange={(v) => setFormCompra({ ...formCompra, Neto_Gravado_105: v })} />
+                <MontoInput label="IVA 10.5%" value={formCompra.IVA_105} onChange={(v) => setFormCompra({ ...formCompra, IVA_105: v })} />
+                <MontoInput label="No gravado / Exento" value={formCompra.Monto_No_Gravado_Exento} onChange={(v) => setFormCompra({ ...formCompra, Monto_No_Gravado_Exento: v })} />
+                <MontoInput label="Retención IVA" value={formCompra.Retencion_IVA} onChange={(v) => setFormCompra({ ...formCompra, Retencion_IVA: v })} />
+                <MontoInput label="Retención Ganancias" value={formCompra.Retencion_Ganancias} onChange={(v) => setFormCompra({ ...formCompra, Retencion_Ganancias: v })} />
+                <MontoInput label="Retención IIBB" value={formCompra.Retencion_IIBB} onChange={(v) => setFormCompra({ ...formCompra, Retencion_IIBB: v })} />
+                <div className="metric-card" style={{ alignSelf: 'end' }}>
+                  <p className="metric-label">Total calculado</p>
+                  <p className="metric-value">{fmtMoney(totalCompra)}</p>
+                </div>
               </div>
               <label style={{ display: 'block', marginTop: '12px' }}>
                 Notas
@@ -330,7 +327,7 @@ function IVA() {
                       <td>{fmtMoney(c.Total_Facturado)}</td>
                       <td style={{ textAlign: 'right' }}>
                         <button onClick={() => startEditCompra(c)}>Editar</button>{' '}
-                        <button onClick={async () => { if (!confirm('¿Eliminar?')) return; await window.api.ivaCompras.delete(c.ID_iva_compra); loadAll() }}>Eliminar</button>
+                        <button onClick={() => setConfirmModal({ mensaje: '¿Eliminar esta compra?', onConfirmar: async () => { await ivaComprasApi.delete(c.ID_iva_compra); setConfirmModal(null); loadAll() } })}>Eliminar</button>
                       </td>
                     </tr>
                   ))}
@@ -353,20 +350,24 @@ function IVA() {
             <form onSubmit={handleSubmitVenta} className="card" style={{ marginBottom: '1.5rem' }}>
               <p className="card-title">{editingVentaId ? 'Editar venta' : 'Nueva venta'}</p>
               <div className="form-grid">
-                <label>
-                  Empresa (nuestra S.A.)
-                  <select value={formVenta.ID_persona_empresa} onChange={(e) => setFormVenta({ ...formVenta, ID_persona_empresa: e.target.value })} required>
-                    <option value="">Seleccionar...</option>
-                    {personas.map((p) => <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>)}
-                  </select>
-                </label>
-                <label>
-                  Cliente
-                  <select value={formVenta.ID_persona_cliente} onChange={(e) => setFormVenta({ ...formVenta, ID_persona_cliente: e.target.value })} required>
-                    <option value="">Seleccionar...</option>
-                    {personas.map((p) => <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>)}
-                  </select>
-                </label>
+                <SelectorPersona
+                  label="Empresa (nuestra S.A.)"
+                  value={formVenta.ID_persona_empresa}
+                  onChange={(v) => setFormVenta({ ...formVenta, ID_persona_empresa: v })}
+                  personas={personas}
+                  onPersonaCreada={loadAll}
+                  contexto="empresa"
+                  required
+                />
+                <SelectorPersona
+                  label="Cliente"
+                  value={formVenta.ID_persona_cliente}
+                  onChange={(v) => setFormVenta({ ...formVenta, ID_persona_cliente: v })}
+                  personas={personas}
+                  onPersonaCreada={loadAll}
+                  contexto="cliente"
+                  required
+                />
                 <label>
                   Tipo de comprobante
                   <select value={formVenta.ID_tipo_comprobante} onChange={(e) => setFormVenta({ ...formVenta, ID_tipo_comprobante: e.target.value })} required>
@@ -376,40 +377,26 @@ function IVA() {
                 </label>
                 <label>
                   Número de factura
-                  <input value={formVenta.Factura_Numero} onChange={(e) => setFormVenta({ ...formVenta, Factura_Numero: e.target.value })} required />
+                  <input
+                    value={formVenta.Factura_Numero}
+                    onChange={(e) => setFormVenta({ ...formVenta, Factura_Numero: formatFactura(e.target.value) })}
+                    placeholder="0000-00000000"
+                    required
+                  />
                 </label>
                 <label>
                   Fecha de factura
                   <input type="date" value={formVenta.Fecha_Factura} onChange={(e) => setFormVenta({ ...formVenta, Fecha_Factura: e.target.value })} required />
                 </label>
-                <label>
-                  Fecha de registro
-                  <input type="date" value={formVenta.Fecha_Registro} onChange={(e) => setFormVenta({ ...formVenta, Fecha_Registro: e.target.value })} required />
-                </label>
-                <label>
-                  Neto gravado 21%
-                  <input type="number" step="0.01" value={formVenta.Neto_Gravado_21} onChange={(e) => setFormVenta({ ...formVenta, Neto_Gravado_21: e.target.value })} />
-                </label>
-                <label>
-                  IVA 21%
-                  <input type="number" step="0.01" value={formVenta.IVA_21} onChange={(e) => setFormVenta({ ...formVenta, IVA_21: e.target.value })} />
-                </label>
-                <label>
-                  Neto gravado 10.5%
-                  <input type="number" step="0.01" value={formVenta.Neto_Gravado_105} onChange={(e) => setFormVenta({ ...formVenta, Neto_Gravado_105: e.target.value })} />
-                </label>
-                <label>
-                  IVA 10.5%
-                  <input type="number" step="0.01" value={formVenta.IVA_105} onChange={(e) => setFormVenta({ ...formVenta, IVA_105: e.target.value })} />
-                </label>
-                <label>
-                  No gravado / Exento
-                  <input type="number" step="0.01" value={formVenta.Monto_No_Gravado_Exento} onChange={(e) => setFormVenta({ ...formVenta, Monto_No_Gravado_Exento: e.target.value })} />
-                </label>
-                <label>
-                  Total facturado
-                  <input type="number" step="0.01" value={formVenta.Total_Facturado} onChange={(e) => setFormVenta({ ...formVenta, Total_Facturado: e.target.value })} required />
-                </label>
+                <MontoInput label="Neto gravado 21%" value={formVenta.Neto_Gravado_21} onChange={(v) => setFormVenta({ ...formVenta, Neto_Gravado_21: v })} />
+                <MontoInput label="IVA 21%" value={formVenta.IVA_21} onChange={(v) => setFormVenta({ ...formVenta, IVA_21: v })} />
+                <MontoInput label="Neto gravado 10.5%" value={formVenta.Neto_Gravado_105} onChange={(v) => setFormVenta({ ...formVenta, Neto_Gravado_105: v })} />
+                <MontoInput label="IVA 10.5%" value={formVenta.IVA_105} onChange={(v) => setFormVenta({ ...formVenta, IVA_105: v })} />
+                <MontoInput label="No gravado / Exento" value={formVenta.Monto_No_Gravado_Exento} onChange={(v) => setFormVenta({ ...formVenta, Monto_No_Gravado_Exento: v })} />
+                <div className="metric-card" style={{ alignSelf: 'end' }}>
+                  <p className="metric-label">Total calculado</p>
+                  <p className="metric-value">{fmtMoney(totalVenta)}</p>
+                </div>
               </div>
               <label style={{ display: 'block', marginTop: '12px' }}>
                 Notas
@@ -452,7 +439,7 @@ function IVA() {
                       <td>{fmtMoney(v.Total_Facturado)}</td>
                       <td style={{ textAlign: 'right' }}>
                         <button onClick={() => startEditVenta(v)}>Editar</button>{' '}
-                        <button onClick={async () => { if (!confirm('¿Eliminar?')) return; await window.api.ivaVentas.delete(v.ID_iva_venta); loadAll() }}>Eliminar</button>
+                        <button onClick={() => setConfirmModal({ mensaje: '¿Eliminar esta venta?', onConfirmar: async () => { await ivaVentasApi.delete(v.ID_iva_venta); setConfirmModal(null); loadAll() } })}>Eliminar</button>
                       </td>
                     </tr>
                   ))}
@@ -461,6 +448,14 @@ function IVA() {
             )}
           </div>
         </>
+      )}
+      {confirmModal && (
+        <ConfirmModal
+          mensaje={confirmModal.mensaje}
+          onConfirmar={confirmModal.onConfirmar}
+          onCancelar={() => setConfirmModal(null)}
+          peligroso
+        />
       )}
     </div>
   )

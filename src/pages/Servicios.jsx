@@ -1,4 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { servicios as serviciosApi, boletas as boletasApi, unidades as unidadesApi, personas as personasApi, cuentas as cuentasApi, catalogos } from "../services/api"
+import SelectorPersona from '../components/SelectorPersona'
+import ConfirmModal from '../components/ConfirmModal'
 
 const emptyServicio = {
   ID_unidad: "",
@@ -58,6 +61,8 @@ function Servicios() {
   const [editingBoletaId, setEditingBoletaId] = useState(null);
   const [showFormBoleta, setShowFormBoleta] = useState(false);
 
+  const [confirmModal, setConfirmModal] = useState(null)
+
   const [pagandoId, setPagandoId] = useState(null);
   const [pagoForm, setPagoForm] = useState({
     cuentaId: "",
@@ -67,14 +72,14 @@ function Servicios() {
 
   async function loadServicios() {
     const [s, u, p, ts, eb, r, c, mp] = await Promise.all([
-      window.api.servicios.getAll(),
-      window.api.unidades.getAll(),
-      window.api.personas.getAll(),
-      window.api.catalogos.tiposServicio(),
-      window.api.catalogos.estadosBoleta(),
-      window.api.catalogos.responsablesPago(),
-      window.api.cuentas.getAll(),
-      window.api.catalogos.mediosPago(),
+      serviciosApi.getAll(),
+      unidadesApi.getAll(),
+      personasApi.getAll(),
+      catalogos.tiposServicio(),
+      catalogos.estadosBoleta(),
+      catalogos.responsablesPago(),
+      cuentasApi.getAll(),
+      catalogos.mediosPago(),
     ]);
     setServicios(s);
     setUnidades(u);
@@ -87,7 +92,7 @@ function Servicios() {
   }
 
   async function loadBoletas(servicioId) {
-    const data = await window.api.boletas.getByServicio(servicioId);
+    const data = await boletasApi.getByServicio(servicioId);
     setBoletas(data);
   }
 
@@ -106,13 +111,10 @@ function Servicios() {
   async function handleSubmitServicio(e) {
     e.preventDefault();
     if (editingServicioId) {
-      await window.api.servicios.update(editingServicioId, formServicio);
+      await serviciosApi.update(editingServicioId, formServicio);
     } else {
       const id = "SP-" + Date.now();
-      await window.api.servicios.create({
-        ID_servicio_prop: id,
-        ...formServicio,
-      });
+      await serviciosApi.create(formServicio);
     }
     setShowFormServicio(false);
     setFormServicio(emptyServicio);
@@ -138,10 +140,10 @@ function Servicios() {
       Fecha_Pago: null,
     };
     if (editingBoletaId) {
-      await window.api.boletas.update(editingBoletaId, data);
+      await boletasApi.update(editingBoletaId, data);
     } else {
       const id = "BOL-" + Date.now();
-      await window.api.boletas.create({ ID_boleta: id, ...data });
+      await boletasApi.create(data);
     }
     setShowFormBoleta(false);
     setFormBoleta(emptyBoleta);
@@ -159,7 +161,7 @@ function Servicios() {
       alert("Completá cuenta y medio de pago");
       return;
     }
-    await window.api.boletas.pagar(
+    await boletasApi.pagar(
       boleta.ID_boleta,
       pagoForm.cuentaId || null,
       pagoForm.fecha + "T00:00:00.000Z",
@@ -172,15 +174,25 @@ function Servicios() {
   }
 
   async function handleDeleteServicio(id) {
-    if (!confirm("¿Eliminar este servicio?")) return;
-    await window.api.servicios.delete(id);
-    loadServicios();
+    setConfirmModal({
+      mensaje: '¿Eliminar este servicio? Se eliminarán también todas sus boletas.',
+      onConfirmar: async () => {
+        await serviciosApi.delete(id)
+        setConfirmModal(null)
+        loadServicios()
+      },
+    })
   }
 
   async function handleDeleteBoleta(id) {
-    if (!confirm("¿Eliminar esta boleta?")) return;
-    await window.api.boletas.delete(id);
-    loadBoletas(servicioActivo.ID_servicio_prop);
+    setConfirmModal({
+      mensaje: '¿Eliminar esta boleta?',
+      onConfirmar: async () => {
+        await boletasApi.delete(id)
+        setConfirmModal(null)
+        loadBoletas(servicioActivo.ID_servicio_prop)
+      },
+    })
   }
 
   function abrirServicio(servicio) {
@@ -576,22 +588,15 @@ function Servicios() {
                 onChange={handleChangeServicio}
               />
             </label>
-            <label>
-              Titular
-              <select
-                name="ID_persona_titular"
-                value={formServicio.ID_persona_titular}
-                onChange={handleChangeServicio}
-                required
-              >
-                <option value="">Seleccionar...</option>
-                {personas.map((p) => (
-                  <option key={p.ID_persona} value={p.ID_persona}>
-                    {p.Nombre}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <SelectorPersona
+              label="Titular"
+              value={formServicio.ID_persona_titular}
+              onChange={(v) => setFormServicio({ ...formServicio, ID_persona_titular: v })}
+              personas={personas}
+              onPersonaCreada={loadServicios}
+              contexto="titular"
+              required
+            />
           </div>
           <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
             <button type="submit">
@@ -644,6 +649,14 @@ function Servicios() {
           </table>
         )}
       </div>
+      {confirmModal && (
+        <ConfirmModal
+          mensaje={confirmModal.mensaje}
+          onConfirmar={confirmModal.onConfirmar}
+          onCancelar={() => setConfirmModal(null)}
+          peligroso
+        />
+      )}
     </div>
   );
 }

@@ -266,10 +266,58 @@ export function registerHandlers() {
     return toPlain(data)
   })
 
+  ipcMain.handle('libroDiario:crear', async (event, data) => {
+    const { ID_cuenta, ID_persona_entidad, ID_unidad, ID_resumen_tarjeta, ID_medio_pago, ID_subcategoria_flujo, ...rest } = data
+    return toPlain(await prisma.libro_diario.create({
+      data: {
+        ...rest,
+        cuenta: { connect: { ID_cuenta } },
+        medio_pago: { connect: { ID_medio: ID_medio_pago } },
+        subcategoria: { connect: { ID_subcat: ID_subcategoria_flujo } },
+        ...(ID_persona_entidad ? { persona_entidad: { connect: { ID_persona: ID_persona_entidad } } } : {}),
+        ...(ID_unidad ? { unidad: { connect: { ID_unidad } } } : {}),
+        ...(ID_resumen_tarjeta ? { resumen_tarjeta: { connect: { ID_resumen: ID_resumen_tarjeta } } } : {}),
+      },
+    }))
+  })
+
+  ipcMain.handle('libroDiario:verificar', async (event, id) => {
+    const mov = await prisma.libro_diario.findUnique({ where: { ID_movimiento: id } })
+    return toPlain({
+      tieneOrigen: mov?.Modulo_Origen && mov.Modulo_Origen !== 'MANUAL',
+      moduloOrigen: mov?.Modulo_Origen,
+    })
+  })
+
+  ipcMain.handle('libroDiario:delete', async (event, id) => {
+    return toPlain(await prisma.libro_diario.delete({ where: { ID_movimiento: id } }))
+  })
+
   // ============================================================
   // COBROS DE ALQUILER
   // ============================================================
-ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, ...data }) => {
+  ipcMain.handle('cobros:getAll', async () => {
+    const data = await prisma.cobros_alquiler.findMany({
+      include: {
+        periodo_contrato: {
+          include: {
+            contrato: {
+              include: {
+                unidad: { include: { edificio: true } },
+                inquilino: true,
+              },
+            },
+          },
+        },
+        cuenta_destino: true,
+        imputacion: true,
+      },
+      orderBy: { Fecha_Pago: 'desc' },
+    })
+    return toPlain(data)
+  })
+  
+  ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, ...data }) => {
     const cobro = await prisma.cobros_alquiler.create({ data })
 
     if (data.ID_periodo_contrato) {
@@ -402,7 +450,25 @@ ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, 
   })
 
   ipcMain.handle('resumenes:create', async (event, data) => {
-    return toPlain(await prisma.resumenes_tarjeta.create({ data }))
+    const resumen = await prisma.resumenes_tarjeta.create({
+      data,
+      include: { tarjeta: true },
+    })
+
+    // Generar vencimiento automático
+    await prisma.vencimientos.create({
+      data: {
+        ID_vencimiento: 'VEN-' + Date.now(),
+        Fecha_Vencimiento: data.Fecha_Vencimiento,
+        Detalle: `Resumen tarjeta - ${resumen.tarjeta?.Nombre_Comercial || resumen.ID_tarjeta_titular}`,
+        Monto_Estimado: 0,
+        ID_estado_vencimiento: 'PENDIENTE',
+        Origen_Modulo: 'TARJETAS',
+        ID_referencia_origen: resumen.ID_resumen,
+      },
+    })
+
+    return toPlain(resumen)
   })
 
   ipcMain.handle('resumenes:pagar', async (event, { id, cuentaId, fecha, monto, medio }) => {
@@ -483,7 +549,27 @@ ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, 
   })
 
   ipcMain.handle('boletas:create', async (event, data) => {
-    return toPlain(await prisma.boletas_servicios.create({ data }))
+    const boleta = await prisma.boletas_servicios.create({
+      data,
+      include: { servicio_prop: { include: { tipo_servicio: true } } },
+    })
+
+    // Generar vencimiento automático solo si el responsable es PROPIETARIO
+    if (data.Responsable_Pago === 'PROPIETARIO') {
+      await prisma.vencimientos.create({
+        data: {
+          ID_vencimiento: 'VEN-' + Date.now(),
+          Fecha_Vencimiento: data.Fecha_Vencimiento,
+          Detalle: `Boleta ${boleta.servicio_prop?.tipo_servicio?.Descripcion || 'servicio'} - ${data.Periodo}`,
+          Monto_Estimado: data.Importe,
+          ID_estado_vencimiento: 'PENDIENTE',
+          Origen_Modulo: 'SERVICIOS',
+          ID_referencia_origen: boleta.ID_boleta,
+        },
+      })
+    }
+
+    return toPlain(boleta)
   })
 
   ipcMain.handle('boletas:update', async (event, { id, data }) => {
@@ -533,6 +619,67 @@ ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, 
     }
 
     return toPlain(boleta)
+  })
+
+  // ============================================================
+  // VENCIMIENTOS
+  // ============================================================
+  ipcMain.handle('vencimientos:getAll', async () => {
+    const data = await prisma.vencimientos.findMany({
+      include: { estado: true },
+      orderBy: { Fecha_Vencimiento: 'asc' },
+    })
+    return toPlain(data)
+  })
+
+  ipcMain.handle('vencimientos:getProximos', async () => {
+    const hoy = new Date()
+    const en30dias = new Date()
+    en30dias.setDate(en30dias.getDate() + 30)
+    const data = await prisma.vencimientos.findMany({
+      where: {
+        ID_estado_vencimiento: 'PENDIENTE',
+        Fecha_Vencimiento: {
+          gte: hoy.toISOString(),
+          lte: en30dias.toISOString(),
+        },
+      },
+      include: { estado: true },
+      orderBy: { Fecha_Vencimiento: 'asc' },
+    })
+    return toPlain(data)
+  })
+
+  ipcMain.handle('vencimientos:create', async (event, data) => {
+    return toPlain(await prisma.vencimientos.create({ data }))
+  })
+
+  ipcMain.handle('vencimientos:update', async (event, { id, data }) => {
+    return toPlain(await prisma.vencimientos.update({
+      where: { ID_vencimiento: id },
+      data,
+    }))
+  })
+
+  ipcMain.handle('vencimientos:marcarPagado', async (event, { id, fecha }) => {
+    return toPlain(await prisma.vencimientos.update({
+      where: { ID_vencimiento: id },
+      data: {
+        ID_estado_vencimiento: 'PAGADO',
+        Fecha_Pago_Real: fecha,
+      },
+    }))
+  })
+
+  ipcMain.handle('vencimientos:delete', async (event, id) => {
+    // Borrar movimiento asociado en libro diario si existe
+    await prisma.libro_diario.deleteMany({
+      where: {
+        Modulo_Origen: 'VENCIMIENTOS',
+        ID_referencia_origen: id,
+      },
+    })
+    return toPlain(await prisma.vencimientos.delete({ where: { ID_vencimiento: id } }))
   })
 
   // ============================================================
@@ -649,4 +796,6 @@ ipcMain.handle('cobros:create', async (event, { medioPago, personaId, unidadId, 
   ipcMain.handle('catalogos:marcasTarjeta', async () => toPlain(await prisma.marcas_tarjeta.findMany()))
   ipcMain.handle('catalogos:estadosResumen', async () => toPlain(await prisma.estados_resumen.findMany()))
   ipcMain.handle('catalogos:tiposComprobante', async () => toPlain(await prisma.tipo_comprobante.findMany()))
+  ipcMain.handle('catalogos:estadosVencimiento', async () => toPlain(await prisma.estados_vencimiento.findMany()))
+  ipcMain.handle('catalogos:subcategoriasFlujo', async () => toPlain(await prisma.subcategorias_flujo.findMany()))
 }

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import { unidades as unidadesApi, edificios as edificiosApi, catalogos } from '../services/api'
 import { useNavigate } from 'react-router-dom'
+import ConfirmModal from '../components/ConfirmModal'
 
 const emptyForm = {
   Nombre_Unidad: '',
@@ -35,14 +37,15 @@ function Unidades() {
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState(null)
   const [showForm, setShowForm] = useState(false)
+  const [confirmModal, setConfirmModal] = useState(null)
 
   async function loadAll() {
     const [u, ed, t, p, e] = await Promise.all([
-      window.api.unidades.getAll(),
-      window.api.edificios.getAll(),
-      window.api.catalogos.tiposUnidad(),
-      window.api.catalogos.perfilesCobro(),
-      window.api.catalogos.estadosUnidad(),
+      unidadesApi.getAll(),
+      edificiosApi.getAll(),
+      catalogos.tiposUnidad(),
+      catalogos.perfilesCobro(),
+      catalogos.estadosUnidad(),
     ])
     setUnidades(u)
     setEdificios(ed)
@@ -94,10 +97,10 @@ function Unidades() {
     }
 
     if (editingId) {
-      await window.api.unidades.update(editingId, data)
+      await unidadesApi.update(editingId, data)
     } else {
       const id = 'U-' + Date.now()
-      await window.api.unidades.create({ ID_unidad: id, ...data })
+      await unidadesApi.create(data)
     }
 
     setShowForm(false)
@@ -107,9 +110,14 @@ function Unidades() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('¿Eliminar esta unidad?')) return
-    await window.api.unidades.delete(id)
-    loadAll()
+    setConfirmModal({
+      mensaje: '¿Eliminar esta unidad? Si tiene contratos asociados, pueden generarse errores.',
+      onConfirmar: async () => {
+        await unidadesApi.delete(id)
+        setConfirmModal(null)
+        loadAll()
+      },
+    })
   }
 
   return (
@@ -239,6 +247,14 @@ function Unidades() {
             )
           })}
         </div>
+      )}
+      {confirmModal && (
+        <ConfirmModal
+          mensaje={confirmModal.mensaje}
+          onConfirmar={confirmModal.onConfirmar}
+          onCancelar={() => setConfirmModal(null)}
+          peligroso
+        />
       )}
     </div>
   )
