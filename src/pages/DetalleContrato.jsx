@@ -269,6 +269,7 @@ function DetalleContrato() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )
