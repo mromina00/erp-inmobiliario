@@ -15,6 +15,7 @@ import IVA from './pages/IVA'
 import Vencimientos from './pages/Vencimientos'
 import CobrosAlquiler from './pages/CobrosAlquiler'
 import './App.css'
+import { ToastContainer } from './components/Toast'
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -53,6 +54,7 @@ function App() {
             <Route path="/contratos/:id" element={<DetalleContrato />} />
           </Routes>
         </div>
+        <ToastContainer />
       </div>
     </HashRouter>
   )

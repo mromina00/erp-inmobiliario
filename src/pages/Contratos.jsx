@@ -348,7 +348,7 @@ function Contratos() {
                   <td>{fmtDate(c.Fecha_Inicio)}</td>
                   <td>{fmtDate(c.Fecha_Vencimiento)}</td>
                   <td>{fmtMoney(c.Monto_Alquiler_Inicial)}</td>
-                  <td>{c.estado_contrato?.Descripcion}</td>
+                  <td>{estados.find(e => e.ID_estado_contrato === c.ID_estado_contrato)?.Descripcion || '-'}</td>
                   <td style={{ textAlign: 'right' }}>
                     <button onClick={() => navigate(`/contratos/${c.ID_contrato}`)}>Ver períodos</button>{' '}
                     <button onClick={() => startEdit(c)}>Editar</button>{' '}

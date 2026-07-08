@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { personas as personasApi, catalogos } from '../services/api'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
+import { toast } from '../components/Toast'
 
 const emptyForm = {
   ID_persona: '',
@@ -101,21 +102,24 @@ function Personas() {
     e.preventDefault()
     const data = { ...form }
     delete data.ID_persona
-    // Si no es inquilino, forzamos ACTIVO
     if (form.ID_rol_persona !== 'INQUILINO') {
       data.ID_estado_persona = 'ACTIVO'
     }
-
-    if (editingId) {
-      await personasApi.update(editingId, data)
-    } else {
-      const id = 'P-' + Date.now()
-      await personasApi.create(data)
+    try {
+      if (editingId) {
+        await personasApi.update(editingId, data)
+        toast('Persona actualizada correctamente')
+      } else {
+        await personasApi.create(data)
+        toast('Persona creada correctamente')
+      }
+      setShowForm(false)
+      setForm(emptyForm)
+      setEditingId(null)
+      loadAll()
+    } catch (err) {
+      toast(err.message || 'Error al guardar', 'error')
     }
-    setShowForm(false)
-    setForm(emptyForm)
-    setEditingId(null)
-    loadAll()
   }
 
   const [confirmModal, setConfirmModal] = useState(null)
@@ -124,9 +128,15 @@ function Personas() {
     setConfirmModal({
       mensaje: '¿Eliminar esta persona? Esta acción no se puede deshacer.',
       onConfirmar: async () => {
-        await personasApi.delete(id)
-        setConfirmModal(null)
-        loadAll()
+        try {
+          await personasApi.delete(id)
+          toast('Persona eliminada')
+          setConfirmModal(null)
+          loadAll()
+        } catch (err) {
+          toast(err.message || 'Error al eliminar', 'error')
+          setConfirmModal(null)
+        }
       },
     })
   }
