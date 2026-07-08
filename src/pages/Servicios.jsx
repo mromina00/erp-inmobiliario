@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { servicios as serviciosApi, boletas as boletasApi, unidades as unidadesApi, personas as personasApi, cuentas as cuentasApi, catalogos } from "../services/api"
 import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
+import LoadingButton from '../components/LoadingButton'
 
 const emptyServicio = {
   ID_unidad: "",
@@ -338,9 +339,9 @@ function Servicios() {
               </label>
             </div>
             <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
-              <button type="submit">
+              <LoadingButton type="submit">
                 {editingBoletaId ? "Guardar cambios" : "Crear boleta"}
-              </button>
+              </LoadingButton>
               <button type="button" onClick={() => setShowFormBoleta(false)}>
                 Cancelar
               </button>
@@ -353,7 +354,8 @@ function Servicios() {
           {boletas.length === 0 ? (
             <p className="card-empty">No hay boletas cargadas todavía.</p>
           ) : (
-            <table className="data-table">
+            <div className="table-wrapper">
+          <table className="data-table">
               <thead>
                 <tr>
                   <th>Período</th>
@@ -492,6 +494,7 @@ function Servicios() {
                 ))}
               </tbody>
             </table>
+          </div>
           )}
         </div>
       </div>
@@ -599,9 +602,9 @@ function Servicios() {
             />
           </div>
           <div style={{ marginTop: "12px", display: "flex", gap: "8px" }}>
-            <button type="submit">
+            <LoadingButton type="submit">
               {editingServicioId ? "Guardar cambios" : "Crear servicio"}
-            </button>
+            </LoadingButton>
             <button type="button" onClick={() => setShowFormServicio(false)}>
               Cancelar
             </button>
@@ -614,6 +617,7 @@ function Servicios() {
         {servicios.length === 0 ? (
           <p className="card-empty">No hay servicios cargados todavía.</p>
         ) : (
+          <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
@@ -647,6 +651,7 @@ function Servicios() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
       {confirmModal && (

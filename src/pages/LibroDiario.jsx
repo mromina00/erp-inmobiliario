@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { libroDiario as libroDiarioApi, cuentas as cuentasApi, personas as personasApi, catalogos } from '../services/api'
 import SelectorPersona from '../components/SelectorPersona'
 import MontoInput, { parseMonto } from '../components/MontoInput'
+import LoadingButton from '../components/LoadingButton'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -163,7 +164,7 @@ function LibroDiario() {
             <input value={form.Detalle} onChange={(e) => setForm({ ...form, Detalle: e.target.value })} required />
           </label>
           <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-            <button type="submit">Guardar movimiento</button>
+            <LoadingButton type="submit">Guardar movimiento</LoadingButton>
             <button type="button" onClick={() => setShowForm(false)}>Cancelar</button>
           </div>
         </form>
@@ -198,6 +199,7 @@ function LibroDiario() {
         {movimientos.length === 0 ? (
           <p className="card-empty">No hay movimientos registrados todavía.</p>
         ) : (
+          <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
@@ -240,6 +242,7 @@ function LibroDiario() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

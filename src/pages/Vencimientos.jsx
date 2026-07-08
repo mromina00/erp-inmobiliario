@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { vencimientos as vencimientosApi, cuentas as cuentasApi, catalogos, libroDiario as libroDiarioApi } from '../services/api'
 import MontoInput, { parseMonto } from '../components/MontoInput'
 import ConfirmModal from '../components/ConfirmModal'
+import LoadingButton from '../components/LoadingButton'
 
 function fmtMoney(n) {
   if (!n) return '-'
@@ -175,7 +176,7 @@ function Vencimientos() {
             <textarea value={form.Notas} onChange={(e) => setForm({ ...form, Notas: e.target.value })} rows={2} />
           </label>
           <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-            <button type="submit">{editingId ? 'Guardar cambios' : 'Crear vencimiento'}</button>
+            <LoadingButton type="submit">{editingId ? 'Guardar cambios' : 'Crear vencimiento'}</LoadingButton>
             <button type="button" onClick={() => setShowForm(false)}>Cancelar</button>
           </div>
         </form>
@@ -201,6 +202,7 @@ function Vencimientos() {
         {filtrados.length === 0 ? (
           <p className="card-empty">No hay vencimientos en esta categoría.</p>
         ) : (
+          <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
@@ -277,6 +279,7 @@ function Vencimientos() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
       {confirmModal && (

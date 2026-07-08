@@ -3,6 +3,7 @@ import { ivaCompras as ivaComprasApi, ivaVentas as ivaVentasApi, personas as per
 import SelectorPersona from '../components/SelectorPersona'
 import MontoInput, { parseMonto } from '../components/MontoInput'
 import ConfirmModal from '../components/ConfirmModal'
+import LoadingButton from '../components/LoadingButton'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -291,7 +292,7 @@ function IVA() {
                 <textarea value={formCompra.Notas} onChange={(e) => setFormCompra({ ...formCompra, Notas: e.target.value })} rows={2} />
               </label>
               <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-                <button type="submit">{editingCompraId ? 'Guardar cambios' : 'Registrar compra'}</button>
+                <LoadingButton type="submit">{editingCompraId ? 'Guardar cambios' : 'Registrar compra'}</LoadingButton>
                 <button type="button" onClick={() => setShowFormCompra(false)}>Cancelar</button>
               </div>
             </form>
@@ -302,7 +303,8 @@ function IVA() {
             {compras.length === 0 ? (
               <p className="card-empty">No hay compras registradas.</p>
             ) : (
-              <table className="data-table">
+              <div className="table-wrapper">
+          <table className="data-table">
                 <thead>
                   <tr>
                     <th>Fecha</th>
@@ -333,6 +335,7 @@ function IVA() {
                   ))}
                 </tbody>
               </table>
+          </div>
             )}
           </div>
         </>
@@ -403,7 +406,7 @@ function IVA() {
                 <textarea value={formVenta.Notas} onChange={(e) => setFormVenta({ ...formVenta, Notas: e.target.value })} rows={2} />
               </label>
               <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-                <button type="submit">{editingVentaId ? 'Guardar cambios' : 'Registrar venta'}</button>
+                <LoadingButton type="submit">{editingVentaId ? 'Guardar cambios' : 'Registrar venta'}</LoadingButton>
                 <button type="button" onClick={() => setShowFormVenta(false)}>Cancelar</button>
               </div>
             </form>
@@ -414,7 +417,8 @@ function IVA() {
             {ventas.length === 0 ? (
               <p className="card-empty">No hay ventas registradas.</p>
             ) : (
-              <table className="data-table">
+              <div className="table-wrapper">
+          <table className="data-table">
                 <thead>
                   <tr>
                     <th>Fecha</th>
@@ -445,6 +449,7 @@ function IVA() {
                   ))}
                 </tbody>
               </table>
+          </div>
             )}
           </div>
         </>

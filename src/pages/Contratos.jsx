@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
 import MontoInput, { parseMonto } from '../components/MontoInput'
+import LoadingButton from '../components/LoadingButton'
 
 const emptyForm = {
   ID_unidad: '',
@@ -315,7 +316,7 @@ function Contratos() {
           </label>
 
           <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-            <button type="submit">{editingId ? 'Guardar cambios' : 'Crear contrato'}</button>
+            <LoadingButton type="submit">{editingId ? 'Guardar cambios' : 'Crear contrato'}</LoadingButton>
             <button type="button" onClick={() => setShowForm(false)}>Cancelar</button>
           </div>
         </form>
@@ -326,6 +327,7 @@ function Contratos() {
         {contratos.length === 0 ? (
           <p className="card-empty">No hay contratos cargados todavía.</p>
         ) : (
+          <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
@@ -356,6 +358,7 @@ function Contratos() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
       {confirmModal && (

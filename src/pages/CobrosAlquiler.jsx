@@ -69,6 +69,7 @@ function CobrosAlquiler() {
         {filtrados.length === 0 ? (
           <p className="card-empty">No hay cobros registrados todavía.</p>
         ) : (
+          <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
@@ -99,6 +100,7 @@ function CobrosAlquiler() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

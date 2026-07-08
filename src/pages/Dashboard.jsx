@@ -55,6 +55,7 @@ function Dashboard() {
         {proximos.length === 0 ? (
           <p className="card-empty">No hay vencimientos en los próximos 30 días.</p>
         ) : (
+          <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
@@ -80,6 +81,7 @@ function Dashboard() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

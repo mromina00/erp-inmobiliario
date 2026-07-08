@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { unidades as unidadesApi, edificios as edificiosApi, catalogos } from '../services/api'
 import { useNavigate } from 'react-router-dom'
 import ConfirmModal from '../components/ConfirmModal'
+import LoadingButton from '../components/LoadingButton'
 
 const emptyForm = {
   Nombre_Unidad: '',
@@ -226,7 +227,7 @@ function Unidades() {
           </label>
 
           <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-            <button type="submit">{editingId ? 'Guardar cambios' : 'Crear unidad'}</button>
+            <LoadingButton type="submit">{editingId ? 'Guardar cambios' : 'Crear unidad'}</LoadingButton>
             <button type="button" onClick={() => setShowForm(false)}>Cancelar</button>
           </div>
         </form>

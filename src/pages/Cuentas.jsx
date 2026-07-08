@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { cuentas as cuentasApi, personas as personasApi, catalogos } from '../services/api'
 import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
+import LoadingButton from '../components/LoadingButton'
 
 const emptyForm = {
   Nombre_Cuenta: '',
@@ -159,7 +160,7 @@ function Cuentas() {
             </label>
           </div>
           <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-            <button type="submit">{editingId ? 'Guardar cambios' : 'Crear cuenta'}</button>
+            <LoadingButton type="submit">{editingId ? 'Guardar cambios' : 'Crear cuenta'}</LoadingButton>
             <button type="button" onClick={() => setShowForm(false)}>Cancelar</button>
           </div>
         </form>
@@ -170,6 +171,7 @@ function Cuentas() {
         {cuentas.length === 0 ? (
           <p className="card-empty">No hay cuentas cargadas todavía.</p>
         ) : (
+          <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
@@ -195,6 +197,7 @@ function Cuentas() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
       {confirmModal && (

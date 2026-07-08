@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { personas as personasApi, catalogos } from '../services/api'
 import ConfirmModal from '../components/ConfirmModal'
+import LoadingButton from '../components/LoadingButton'
 
 const emptyForm = {
   ID_persona: '',
@@ -233,7 +234,7 @@ function Personas() {
           </label>
 
           <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-            <button type="submit">{editingId ? 'Guardar cambios' : 'Crear persona'}</button>
+            <LoadingButton type="submit">{editingId ? 'Guardar cambios' : 'Crear persona'}</LoadingButton>
             <button type="button" onClick={() => setShowForm(false)}>Cancelar</button>
           </div>
         </form>
@@ -244,6 +245,7 @@ function Personas() {
         {personas.length === 0 ? (
           <p className="card-empty">No hay personas cargadas todavía.</p>
         ) : (
+          <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
@@ -269,6 +271,7 @@ function Personas() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
       {confirmModal && (

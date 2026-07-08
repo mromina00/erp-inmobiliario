@@ -125,7 +125,8 @@ function DetalleContrato() {
 
       <div className="card">
         <p className="card-title">Períodos del contrato ({periodos.length})</p>
-        <table className="data-table">
+        <div className="table-wrapper">
+          <table className="data-table">
           <thead>
             <tr>
               <th>Mes</th>

@@ -1,7 +1,7 @@
+import { useState } from 'react'
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import Dashboard from './pages/Dashboard'
-import Placeholder from './pages/Placeholder'
 import Personas from './pages/Personas'
 import Unidades from './pages/Unidades'
 import Edificios from './pages/Edificios'
@@ -17,10 +17,25 @@ import CobrosAlquiler from './pages/CobrosAlquiler'
 import './App.css'
 
 function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
   return (
     <HashRouter>
       <div className="app-layout">
-        <Sidebar />
+        {/* Botón hamburguesa — solo visible en móvil */}
+        <button
+          className="hamburger"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Abrir menú"
+        >
+          ☰
+        </button>
+
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+
         <div className="content">
           <Routes>
             <Route path="/" element={<Dashboard />} />

@@ -9,10 +9,35 @@ body {
   color: #1a1a1a;
 }
 
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+
 .app-layout {
   display: flex;
   height: 100vh;
+  overflow: hidden;
 }
+
+/* Botón hamburguesa — oculto en desktop, visible en móvil */
+.hamburger {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 200;
+  font-size: 20px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e5e5e3;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
 
 .sidebar {
   width: 220px;
@@ -21,12 +46,34 @@ body {
   padding: 1.25rem 0.75rem;
   overflow-y: auto;
   flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.5rem 1rem;
 }
 
 .sidebar-title {
   font-size: 15px;
   font-weight: 600;
-  padding: 0 0.5rem 1rem;
+}
+
+/* Botón cerrar sidebar — oculto en desktop */
+.sidebar-close {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 6px;
+  color: #666;
+}
+
+.sidebar-overlay {
+  display: none;
 }
 
 .sidebar-section {
@@ -61,27 +108,16 @@ body {
   font-weight: 500;
 }
 
+/* ============================================================
+   CONTENIDO
+   ============================================================ */
+
 .content {
   flex: 1;
   padding: 1.5rem 2.5rem;
   overflow-y: auto;
   min-width: 0;
   width: 100%;
-  box-sizing: border-box;
-}
-
-.data-table {
-  table-layout: auto;
-  width: 100%;
-}
-
-.data-table th, .data-table td {
-  white-space: nowrap;
-}
-
-.data-table th:last-child,
-.data-table td:last-child {
-  width: 99%;
 }
 
 .content h1 {
@@ -89,6 +125,34 @@ body {
   font-weight: 500;
   margin: 0 0 1.25rem;
 }
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e5e3;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  width: 100%;
+}
+
+.card-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 0 0 10px;
+}
+
+.card-empty {
+  font-size: 13px;
+  color: #aaa;
+  margin: 0;
+}
+
+/* ============================================================
+   MÉTRICAS DASHBOARD
+   ============================================================ */
 
 .metrics-grid {
   display: grid;
@@ -116,26 +180,9 @@ body {
   margin: 0;
 }
 
-.card {
-  background: #ffffff;
-  border: 1px solid #e5e5e3;
-  border-radius: 10px;
-  padding: 1rem 1.25rem;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.card-title {
-  font-size: 14px;
-  font-weight: 500;
-  margin: 0 0 10px;
-}
-
-.card-empty {
-  font-size: 13px;
-  color: #aaa;
-  margin: 0;
-}
+/* ============================================================
+   FORMULARIOS
+   ============================================================ */
 
 .form-grid {
   display: grid;
@@ -158,7 +205,17 @@ input, select, textarea {
   border: 1px solid #d8d8d5;
   border-radius: 6px;
   background: #fff;
+  width: 100%;
 }
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #3c34a5;
+}
+
+/* ============================================================
+   BOTONES
+   ============================================================ */
 
 button {
   font-family: inherit;
@@ -168,16 +225,52 @@ button {
   border-radius: 6px;
   background: #fff;
   cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
 }
 
-button:hover {
+button:hover:not(:disabled) {
   background: #f5f5f3;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Botón de acción principal */
+button[type="submit"],
+button.btn-primary {
+  background: #3c34a5;
+  color: #fff;
+  border-color: #3c34a5;
+}
+
+button[type="submit"]:hover:not(:disabled),
+button.btn-primary:hover:not(:disabled) {
+  background: #2e2888;
+}
+
+/* Botón cargando */
+button.loading {
+  opacity: 0.65;
+  cursor: not-allowed;
+  position: relative;
+}
+
+/* ============================================================
+   TABLAS
+   ============================================================ */
+
+.table-wrapper {
+  overflow-x: auto;
+  width: 100%;
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  min-width: 500px;
 }
 
 .data-table th {
@@ -188,11 +281,13 @@ button:hover {
   letter-spacing: 0.02em;
   padding: 8px 6px;
   border-bottom: 1px solid #eee;
+  white-space: nowrap;
 }
 
 .data-table td {
   padding: 10px 6px;
   border-bottom: 1px solid #f2f2f0;
+  white-space: nowrap;
 }
 
 input, select, textarea, button {
@@ -203,9 +298,13 @@ input::placeholder {
   color: #999;
 }
 
+/* ============================================================
+   UNIDADES
+   ============================================================ */
+
 .units-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
   gap: 12px;
 }
 
@@ -228,12 +327,17 @@ input::placeholder {
   margin: 2px 0 0;
 }
 
+/* ============================================================
+   BADGES
+   ============================================================ */
+
 .badge {
   font-size: 11px;
   padding: 3px 8px;
   border-radius: 6px;
   font-weight: 500;
   white-space: nowrap;
+  display: inline-block;
 }
 
 .badge-ok {
@@ -250,6 +354,10 @@ input::placeholder {
   background: #fbe5e3;
   color: #c0392b;
 }
+
+/* ============================================================
+   ACCIONES EN TABLA
+   ============================================================ */
 
 .acciones-inline {
   display: flex;
@@ -297,11 +405,126 @@ input::placeholder {
   background: #f5f5f3;
 }
 
-@media (max-width: 900px) {
+/* ============================================================
+   RESPONSIVE — TABLET (max 1024px)
+   ============================================================ */
+
+@media (max-width: 1024px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .units-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .content {
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — MÓVIL (max 700px)
+   ============================================================ */
+
+@media (max-width: 700px) {
+  /* Mostrar hamburguesa */
+  .hamburger {
+    display: block;
+  }
+
+  /* Sidebar se convierte en drawer lateral */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 300;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 16px rgba(0,0,0,0.12);
+  }
+
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+
+  /* Overlay oscuro cuando el sidebar está abierto */
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 299;
+  }
+
+  /* Mostrar botón cerrar dentro del sidebar */
+  .sidebar-close {
+    display: block;
+  }
+
+  /* El contenido ocupa todo el ancho */
+  .content {
+    padding: 1rem;
+    padding-top: 56px; /* espacio para el hamburguesa */
+  }
+
+  /* Formularios en una columna */
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Métricas en dos columnas */
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Unidades en dos columnas */
+  .units-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Tablas scrolleables */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Acciones — usar menú desplegable en móvil */
   .acciones-inline {
     display: none;
   }
+
   .acciones-menu {
     display: flex;
   }
+
+  .content h1 {
+    font-size: 18px;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — MÓVIL CHICO (max 400px)
+   ============================================================ */
+
+@media (max-width: 400px) {
+  .metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .units-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   SPINNER ANIMACIÓN
+   ============================================================ */
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

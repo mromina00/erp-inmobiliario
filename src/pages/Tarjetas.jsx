@@ -3,6 +3,7 @@ import { tarjetas as tarjetasApi, gastos as gastosApi, resumenes as resumenesApi
 import AccionesMenu from '../components/AccionesMenu'
 import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
+import LoadingButton from '../components/LoadingButton'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -277,7 +278,7 @@ async function handleDeleteTarjeta(id) {
                   </p>
                 )}
                 <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-                  <button type="submit">Crear gasto</button>
+                  <LoadingButton type="submit">Crear gasto</LoadingButton>
                   <button type="button" onClick={() => setShowFormGasto(false)}>Cancelar</button>
                 </div>
               </form>
@@ -288,7 +289,8 @@ async function handleDeleteTarjeta(id) {
               {gastos.length === 0 ? (
                 <p className="card-empty">No hay gastos cargados.</p>
               ) : (
-                <table className="data-table">
+                <div className="table-wrapper">
+          <table className="data-table">
                   <thead>
                     <tr>
                       <th>Fecha</th>
@@ -314,6 +316,7 @@ async function handleDeleteTarjeta(id) {
                     ))}
                   </tbody>
                 </table>
+          </div>
               )}
             </div>
           </>
@@ -367,7 +370,7 @@ async function handleDeleteTarjeta(id) {
                   </label>
                 </div>
                 <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-                  <button type="submit">Crear resumen</button>
+                  <LoadingButton type="submit">Crear resumen</LoadingButton>
                   <button type="button" onClick={() => setShowFormResumen(false)}>Cancelar</button>
                 </div>
               </form>
@@ -378,7 +381,8 @@ async function handleDeleteTarjeta(id) {
               {resumenes.length === 0 ? (
                 <p className="card-empty">No hay resúmenes cargados.</p>
               ) : (
-                <table className="data-table">
+                <div className="table-wrapper">
+          <table className="data-table">
                   <thead>
                     <tr>
                       <th>Cierre</th>
@@ -458,6 +462,7 @@ async function handleDeleteTarjeta(id) {
                     ))}
                   </tbody>
                 </table>
+          </div>
               )}
             </div>
           </>
@@ -534,7 +539,7 @@ async function handleDeleteTarjeta(id) {
             </label>
           </div>
           <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-            <button type="submit">{editingTarjetaId ? 'Guardar cambios' : 'Crear tarjeta'}</button>
+            <LoadingButton type="submit">{editingTarjetaId ? 'Guardar cambios' : 'Crear tarjeta'}</LoadingButton>
             <button type="button" onClick={() => setShowFormTarjeta(false)}>Cancelar</button>
           </div>
         </form>
@@ -545,6 +550,7 @@ async function handleDeleteTarjeta(id) {
         {tarjetas.length === 0 ? (
           <p className="card-empty">No hay tarjetas cargadas todavía.</p>
         ) : (
+          <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
@@ -593,6 +599,7 @@ async function handleDeleteTarjeta(id) {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
       {confirmModal && (

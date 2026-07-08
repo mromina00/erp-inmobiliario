@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { edificios as edificiosApi } from '../services/api'
 import ConfirmModal from '../components/ConfirmModal'
 import { useNavigate } from 'react-router-dom'
+import LoadingButton from '../components/LoadingButton'
 
 const emptyForm = { Nombre: '', Direccion: '' }
 
@@ -86,7 +87,7 @@ function Edificios() {
             <input name="Direccion" value={form.Direccion} onChange={handleChange} />
           </label>
           <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
-            <button type="submit">{editingId ? 'Guardar cambios' : 'Crear edificio'}</button>
+            <LoadingButton type="submit">{editingId ? 'Guardar cambios' : 'Crear edificio'}</LoadingButton>
             <button type="button" onClick={() => setShowForm(false)}>Cancelar</button>
           </div>
         </form>
@@ -97,6 +98,7 @@ function Edificios() {
         {edificios.length === 0 ? (
           <p className="card-empty">No hay edificios cargados todavía.</p>
         ) : (
+          <div className="table-wrapper">
           <table className="data-table">
             <thead>
               <tr>
@@ -116,6 +118,7 @@ function Edificios() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
       {confirmModal && (
