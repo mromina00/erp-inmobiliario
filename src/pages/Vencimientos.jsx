@@ -3,6 +3,7 @@ import { vencimientos as vencimientosApi, cuentas as cuentasApi, catalogos, libr
 import MontoInput, { parseMonto } from '../components/MontoInput'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
+import { toast } from '../components/Toast'
 
 function fmtMoney(n) {
   if (!n) return '-'
@@ -74,51 +75,63 @@ function Vencimientos() {
       Origen_Modulo: 'FIJO_MANUAL',
       Notas: form.Notas || null,
     }
-    if (editingId) {
-      await vencimientosApi.update(editingId, data)
-    } else {
-      await vencimientosApi.create(data)
+    try {
+      if (editingId) {
+        await vencimientosApi.update(editingId, data)
+        toast('Vencimiento actualizado correctamente')
+      } else {
+        await vencimientosApi.create(data)
+        toast('Vencimiento creado correctamente')
+      }
+      setShowForm(false)
+      setForm(emptyForm)
+      setEditingId(null)
+      loadAll()
+    } catch (err) {
+      toast(err.message || 'Error al guardar', 'error')
     }
-    setShowForm(false)
-    setForm(emptyForm)
-    setEditingId(null)
-    loadAll()
   }
 
   async function handleMarcarPagado(v) {
-    if (!pagoForm.fecha) { alert('Ingresá la fecha de pago'); return }
-    if (!pagoForm.cuentaId) { alert('Elegí una cuenta'); return }
-    if (!pagoForm.medio) { alert('Elegí un medio de pago'); return }
-
-    await vencimientosApi.marcarPagado(v.ID_vencimiento, pagoForm.fecha + 'T00:00:00.000Z')
-
-    // Generar movimiento en libro diario
-    await libroDiarioApi.crear({
-      ID_movimiento: 'LD-' + Date.now(),
-      Fecha: pagoForm.fecha + 'T00:00:00.000Z',
-      ID_cuenta: pagoForm.cuentaId,
-      ID_persona_entidad: null,
-      Detalle: `Pago vencimiento - ${v.Detalle}`,
-      Monto: -(Number(v.Monto_Estimado) || 0),
-      ID_medio_pago: pagoForm.medio,
-      ID_subcategoria_flujo: 'OTROS_INGRESOS',
-      Modulo_Origen: 'VENCIMIENTOS',
-      ID_referencia_origen: v.ID_vencimiento,
-      Conciliado: false,
-    })
-
-    setPagandoId(null)
-    setPagoForm({ fecha: '', cuentaId: '', medio: '' })
-    loadAll()
+    if (!pagoForm.fecha) { toast('Ingresá la fecha de pago', 'warn'); return }
+    if (!pagoForm.cuentaId) { toast('Elegí una cuenta', 'warn'); return }
+    if (!pagoForm.medio) { toast('Elegí un medio de pago', 'warn'); return }
+    try {
+      await vencimientosApi.marcarPagado(v.ID_vencimiento, pagoForm.fecha + 'T00:00:00.000Z')
+      await libroDiarioApi.crear({
+        Fecha: pagoForm.fecha + 'T00:00:00.000Z',
+        ID_cuenta: pagoForm.cuentaId,
+        ID_persona_entidad: null,
+        Detalle: `Pago vencimiento - ${v.Detalle}`,
+        Monto: -(Number(v.Monto_Estimado) || 0),
+        ID_medio_pago: pagoForm.medio,
+        ID_subcategoria_flujo: 'OTROS_INGRESOS',
+        Modulo_Origen: 'VENCIMIENTOS',
+        ID_referencia_origen: v.ID_vencimiento,
+        Conciliado: false,
+      })
+      toast('Vencimiento marcado como pagado')
+      setPagandoId(null)
+      setPagoForm({ fecha: '', cuentaId: '', medio: '' })
+      loadAll()
+    } catch (err) {
+      toast(err.message || 'Error al registrar el pago', 'error')
+    }
   }
 
   async function handleDelete(id) {
     setConfirmModal({
       mensaje: '¿Eliminar este vencimiento?',
       onConfirmar: async () => {
-        await vencimientosApi.delete(id)
-        setConfirmModal(null)
-        loadAll()
+        try {
+          await vencimientosApi.delete(id)
+          toast('Vencimiento eliminado')
+          setConfirmModal(null)
+          loadAll()
+        } catch (err) {
+          toast(err.message || 'Error al eliminar', 'error')
+          setConfirmModal(null)
+        }
       },
     })
   }

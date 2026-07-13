@@ -3,6 +3,7 @@ import { cuentas as cuentasApi, personas as personasApi, catalogos } from '../se
 import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
+import { toast } from '../components/Toast'
 
 const emptyForm = {
   Nombre_Cuenta: '',
@@ -73,25 +74,36 @@ function Cuentas() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (editingId) {
-      await cuentasApi.update(editingId, form)
-    } else {
-      const id = 'CTA-' + Date.now()
-      await cuentasApi.create(form)
+    try {
+      if (editingId) {
+        await cuentasApi.update(editingId, form)
+        toast('Cuenta actualizada correctamente')
+      } else {
+        await cuentasApi.create(form)
+        toast('Cuenta creada correctamente')
+      }
+      setShowForm(false)
+      setForm(emptyForm)
+      setEditingId(null)
+      loadAll()
+    } catch (err) {
+      toast(err.message || 'Error al guardar', 'error')
     }
-    setShowForm(false)
-    setForm(emptyForm)
-    setEditingId(null)
-    loadAll()
   }
 
   async function handleDelete(id) {
     setConfirmModal({
       mensaje: '¿Eliminar esta cuenta?',
       onConfirmar: async () => {
-        await cuentasApi.delete(id)
-        setConfirmModal(null)
-        loadAll()
+        try {
+          await cuentasApi.delete(id)
+          toast('Cuenta eliminada')
+          setConfirmModal(null)
+          loadAll()
+        } catch (err) {
+          toast(err.message || 'Error al eliminar', 'error')
+          setConfirmModal(null)
+        }
       },
     })
   }

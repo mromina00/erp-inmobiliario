@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { contratos as contratosApi, periodos as periodosApi, cuentas as cuentasApi, catalogos, cobros as cobrosApi } from '../services/api'
 import { useParams, useNavigate } from 'react-router-dom'
+import { toast } from '../components/Toast'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -55,13 +56,18 @@ function DetalleContrato() {
   }
 
   async function guardarMontoPeriodo(periodoId) {
-    await periodosApi.updateConContrato(id, periodoId, {
-      Monto_Alquiler: parseFloat(montoEdit.Monto_Alquiler),
-      Monto_Expensas: parseFloat(montoEdit.Monto_Expensas),
-      Monto_Cochera: parseFloat(montoEdit.Monto_Cochera || 0),
-    })
-    setEditandoPeriodo(null)
-    loadAll()
+    try {
+      await periodosApi.updateConContrato(id, periodoId, {
+        Monto_Alquiler: parseFloat(montoEdit.Monto_Alquiler),
+        Monto_Expensas: parseFloat(montoEdit.Monto_Expensas),
+        Monto_Cochera: parseFloat(montoEdit.Monto_Cochera || 0),
+      })
+      toast('Montos actualizados')
+      setEditandoPeriodo(null)
+      loadAll()
+    } catch (err) {
+      toast(err.message || 'Error al guardar los montos', 'error')
+    }
   }
 
   function startCobro(periodo) {
@@ -90,22 +96,27 @@ function DetalleContrato() {
 
   async function confirmarCobro(periodoId) {
     if (!cobroForm.ID_cuenta_destino) {
-      alert('Elegí una cuenta destino')
+      toast('Elegí una cuenta destino', 'warn')
       return
     }
     if (!cobroForm.ID_medio_pago) {
-      alert('Elegí un medio de pago')
+      toast('Elegí un medio de pago', 'warn')
       return
     }
-    await cobrosApi.create({
-      ID_periodo_contrato: periodoId,
-      Fecha_Pago: cobroForm.Fecha_Pago + 'T00:00:00.000Z',
-      Monto_Pagado: parseFloat(cobroForm.Monto_Pagado),
-      Imputacion_Pago: cobroForm.Imputacion_Pago,
-      ID_cuenta_destino: cobroForm.ID_cuenta_destino,
-    })
-    setCobrando(null)
-    loadAll()
+    try {
+      await cobrosApi.create({
+        ID_periodo_contrato: periodoId,
+        Fecha_Pago: cobroForm.Fecha_Pago + 'T00:00:00.000Z',
+        Monto_Pagado: parseFloat(cobroForm.Monto_Pagado),
+        Imputacion_Pago: cobroForm.Imputacion_Pago,
+        ID_cuenta_destino: cobroForm.ID_cuenta_destino,
+      })
+      toast('Cobro registrado correctamente')
+      setCobrando(null)
+      loadAll()
+    } catch (err) {
+      toast(err.message || 'Error al registrar el cobro', 'error')
+    }
   }
 
   if (!contrato) return <div>Cargando...</div>

@@ -5,6 +5,7 @@ import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
 import MontoInput, { parseMonto } from '../components/MontoInput'
 import LoadingButton from '../components/LoadingButton'
+import { toast } from '../components/Toast'
 
 const emptyForm = {
   ID_unidad: '',
@@ -140,28 +141,37 @@ function Contratos() {
       ID_estado_contrato: form.ID_estado_contrato,
       Notas: form.Notas || null,
     }
-
-    if (editingId) {
-      await contratosApi.update(editingId, data, garantesSeleccionados)
-    } else {
-      const id = 'C-' + Date.now()
-      await contratosApi.create(data, garantesSeleccionados)
+    try {
+      if (editingId) {
+        await contratosApi.update(editingId, data, garantesSeleccionados)
+        toast('Contrato actualizado correctamente')
+      } else {
+        await contratosApi.create(data, garantesSeleccionados)
+        toast('Contrato creado correctamente')
+      }
+      setShowForm(false)
+      setForm(emptyForm)
+      setGarantesSeleccionados([])
+      setEditingId(null)
+      loadAll()
+    } catch (err) {
+      toast(err.message || 'Error al guardar el contrato', 'error')
     }
-
-    setShowForm(false)
-    setForm(emptyForm)
-    setGarantesSeleccionados([])
-    setEditingId(null)
-    loadAll()
   }
 
   async function handleDelete(id) {
     setConfirmModal({
       mensaje: '¿Eliminar este contrato? Se eliminarán también todos sus períodos y garantes asociados.',
       onConfirmar: async () => {
-        await contratosApi.delete(id)
-        setConfirmModal(null)
-        loadAll()
+        try {
+          await contratosApi.delete(id)
+          toast('Contrato eliminado')
+          setConfirmModal(null)
+          loadAll()
+        } catch (err) {
+          toast(err.message || 'Error al eliminar', 'error')
+          setConfirmModal(null)
+        }
       },
     })
   }

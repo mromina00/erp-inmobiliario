@@ -4,6 +4,7 @@ import SelectorPersona from '../components/SelectorPersona'
 import MontoInput, { parseMonto } from '../components/MontoInput'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
+import { toast } from '../components/Toast'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -111,15 +112,21 @@ function IVA() {
       Total_Facturado: total,
       Notas: formCompra.Notas || null,
     }
-    if (editingCompraId) {
-      await ivaComprasApi.update(editingCompraId, data)
-    } else {
-      await ivaComprasApi.create(data)
+    try {
+      if (editingCompraId) {
+        await ivaComprasApi.update(editingCompraId, data)
+        toast('Compra actualizada correctamente')
+      } else {
+        await ivaComprasApi.create(data)
+        toast('Compra registrada correctamente')
+      }
+      setShowFormCompra(false)
+      setFormCompra(emptyCompra)
+      setEditingCompraId(null)
+      loadAll()
+    } catch (err) {
+      toast(err.message || 'Error al guardar la compra', 'error')
     }
-    setShowFormCompra(false)
-    setFormCompra(emptyCompra)
-    setEditingCompraId(null)
-    loadAll()
   }
 
   async function handleSubmitVenta(e) {
@@ -140,15 +147,21 @@ function IVA() {
       Total_Facturado: total,
       Notas: formVenta.Notas || null,
     }
-    if (editingVentaId) {
-      await ivaVentasApi.update(editingVentaId, data)
-    } else {
-      await ivaVentasApi.create(data)
+    try {
+      if (editingVentaId) {
+        await ivaVentasApi.update(editingVentaId, data)
+        toast('Venta actualizada correctamente')
+      } else {
+        await ivaVentasApi.create(data)
+        toast('Venta registrada correctamente')
+      }
+      setShowFormVenta(false)
+      setFormVenta(emptyVenta)
+      setEditingVentaId(null)
+      loadAll()
+    } catch (err) {
+      toast(err.message || 'Error al guardar la venta', 'error')
     }
-    setShowFormVenta(false)
-    setFormVenta(emptyVenta)
-    setEditingVentaId(null)
-    loadAll()
   }
 
   function startEditCompra(c) {
@@ -329,7 +342,20 @@ function IVA() {
                       <td>{fmtMoney(c.Total_Facturado)}</td>
                       <td style={{ textAlign: 'right' }}>
                         <button onClick={() => startEditCompra(c)}>Editar</button>{' '}
-                        <button onClick={() => setConfirmModal({ mensaje: '¿Eliminar esta compra?', onConfirmar: async () => { await ivaComprasApi.delete(c.ID_iva_compra); setConfirmModal(null); loadAll() } })}>Eliminar</button>
+                        <button onClick={() => setConfirmModal({
+                          mensaje: '¿Eliminar esta compra?',
+                          onConfirmar: async () => {
+                            try {
+                              await ivaComprasApi.delete(c.ID_iva_compra)
+                              toast('Compra eliminada')
+                              setConfirmModal(null)
+                              loadAll()
+                            } catch (err) {
+                              toast(err.message || 'Error al eliminar', 'error')
+                              setConfirmModal(null)
+                            }
+                          }
+                        })}>Eliminar</button>
                       </td>
                     </tr>
                   ))}
@@ -443,7 +469,20 @@ function IVA() {
                       <td>{fmtMoney(v.Total_Facturado)}</td>
                       <td style={{ textAlign: 'right' }}>
                         <button onClick={() => startEditVenta(v)}>Editar</button>{' '}
-                        <button onClick={() => setConfirmModal({ mensaje: '¿Eliminar esta venta?', onConfirmar: async () => { await ivaVentasApi.delete(v.ID_iva_venta); setConfirmModal(null); loadAll() } })}>Eliminar</button>
+                        <button onClick={() => setConfirmModal({
+                          mensaje: '¿Eliminar esta venta?',
+                          onConfirmar: async () => {
+                            try {
+                              await ivaVentasApi.delete(v.ID_iva_venta)
+                              toast('Venta eliminada')
+                              setConfirmModal(null)
+                              loadAll()
+                            } catch (err) {
+                              toast(err.message || 'Error al eliminar', 'error')
+                              setConfirmModal(null)
+                            }
+                          }
+                        })}>Eliminar</button>
                       </td>
                     </tr>
                   ))}

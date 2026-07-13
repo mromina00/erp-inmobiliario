@@ -3,6 +3,7 @@ import { unidades as unidadesApi, edificios as edificiosApi, catalogos } from '.
 import { useNavigate } from 'react-router-dom'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
+import { toast } from '../components/Toast'
 
 const emptyForm = {
   Nombre_Unidad: '',
@@ -110,27 +111,36 @@ function Unidades() {
       Numero: form.Numero === '' ? null : parseInt(form.Numero, 10),
       Dormitorios: form.Dormitorios === '' ? null : parseInt(form.Dormitorios, 10),
     }
-
-    if (editingId) {
-      await unidadesApi.update(editingId, data)
-    } else {
-      const id = 'U-' + Date.now()
-      await unidadesApi.create(data)
+    try {
+      if (editingId) {
+        await unidadesApi.update(editingId, data)
+        toast('Unidad actualizada correctamente')
+      } else {
+        await unidadesApi.create(data)
+        toast('Unidad creada correctamente')
+      }
+      setShowForm(false)
+      setForm(emptyForm)
+      setEditingId(null)
+      loadAll()
+    } catch (err) {
+      toast(err.message || 'Error al guardar', 'error')
     }
-
-    setShowForm(false)
-    setForm(emptyForm)
-    setEditingId(null)
-    loadAll()
   }
 
   async function handleDelete(id) {
     setConfirmModal({
       mensaje: '¿Eliminar esta unidad? Se eliminarán también todos sus contratos, períodos, cobros y servicios asociados. Esta acción no se puede deshacer.',
       onConfirmar: async () => {
-        await unidadesApi.delete(id)
-        setConfirmModal(null)
-        loadAll()
+        try {
+          await unidadesApi.delete(id)
+          toast('Unidad eliminada')
+          setConfirmModal(null)
+          loadAll()
+        } catch (err) {
+          toast(err.message || 'Error al eliminar', 'error')
+          setConfirmModal(null)
+        }
       },
     })
   }

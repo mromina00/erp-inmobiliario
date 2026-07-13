@@ -3,6 +3,7 @@ import { edificios as edificiosApi } from '../services/api'
 import ConfirmModal from '../components/ConfirmModal'
 import { useNavigate } from 'react-router-dom'
 import LoadingButton from '../components/LoadingButton'
+import { toast } from '../components/Toast'
 
 const emptyForm = { Nombre: '', Direccion: '' }
 
@@ -42,25 +43,36 @@ function Edificios() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (editingId) {
-      await edificiosApi.update(editingId, form)
-    } else {
-      const id = 'ED-' + Date.now()
-      await edificiosApi.create(form)
+    try {
+      if (editingId) {
+        await edificiosApi.update(editingId, form)
+        toast('Edificio actualizado correctamente')
+      } else {
+        await edificiosApi.create(form)
+        toast('Edificio creado correctamente')
+      }
+      setShowForm(false)
+      setForm(emptyForm)
+      setEditingId(null)
+      load()
+    } catch (err) {
+      toast(err.message || 'Error al guardar', 'error')
     }
-    setShowForm(false)
-    setForm(emptyForm)
-    setEditingId(null)
-    load()
   }
 
   async function handleDelete(id) {
     setConfirmModal({
       mensaje: '¿Eliminar este edificio?',
       onConfirmar: async () => {
-        await edificiosApi.delete(id)
-        setConfirmModal(null)
-        load()
+        try {
+          await edificiosApi.delete(id)
+          toast('Edificio eliminado')
+          setConfirmModal(null)
+          load()
+        } catch (err) {
+          toast(err.message || 'Error al eliminar', 'error')
+          setConfirmModal(null)
+        }
       },
     })
   }

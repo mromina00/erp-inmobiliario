@@ -3,6 +3,7 @@ import { libroDiario as libroDiarioApi, cuentas as cuentasApi, personas as perso
 import SelectorPersona from '../components/SelectorPersona'
 import MontoInput, { parseMonto } from '../components/MontoInput'
 import LoadingButton from '../components/LoadingButton'
+import { toast } from '../components/Toast'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -59,28 +60,38 @@ function LibroDiario() {
     e.preventDefault()
     const montoRaw = parseMonto(form.Monto) || 0
     const monto = form.esEgreso ? -Math.abs(montoRaw) : Math.abs(montoRaw)
-    await libroDiarioApi.crear({
-      ID_movimiento: 'LD-' + Date.now(),
-      Fecha: form.Fecha + 'T00:00:00.000Z',
-      ID_cuenta: form.ID_cuenta,
-      ID_persona_entidad: form.ID_persona_entidad || null,
-      Detalle: form.Detalle,
-      Monto: monto,
-      ID_medio_pago: form.ID_medio_pago,
-      ID_subcategoria_flujo: form.ID_subcategoria_flujo,
-      Modulo_Origen: 'MANUAL',
-      Conciliado: false,
-      Notas: form.Notas || null,
-    })
-    setShowForm(false)
-    setForm(emptyForm)
-    loadAll()
+    try {
+      await libroDiarioApi.crear({
+        Fecha: form.Fecha + 'T00:00:00.000Z',
+        ID_cuenta: form.ID_cuenta,
+        ID_persona_entidad: form.ID_persona_entidad || null,
+        Detalle: form.Detalle,
+        Monto: monto,
+        ID_medio_pago: form.ID_medio_pago,
+        ID_subcategoria_flujo: form.ID_subcategoria_flujo,
+        Modulo_Origen: 'MANUAL',
+        Conciliado: false,
+        Notas: form.Notas || null,
+      })
+      toast('Movimiento registrado correctamente')
+      setShowForm(false)
+      setForm(emptyForm)
+      loadAll()
+    } catch (err) {
+      toast(err.message || 'Error al guardar el movimiento', 'error')
+    }
   }
 
   async function handleDelete(id) {
-    await libroDiarioApi.delete(id)
-    setConfirmDelete(null)
-    loadAll()
+    try {
+      await libroDiarioApi.delete(id)
+      toast('Movimiento eliminado')
+      setConfirmDelete(null)
+      loadAll()
+    } catch (err) {
+      toast(err.message || 'Error al eliminar', 'error')
+      setConfirmDelete(null)
+    }
   }
 
   const totalIngresos = movimientos.filter((m) => Number(m.Monto) > 0).reduce((acc, m) => acc + Number(m.Monto), 0)
@@ -228,15 +239,20 @@ function LibroDiario() {
                     {fmtMoney(m.Monto)}
                   </td>
                   <td style={{ textAlign: 'right' }}>
-                    <button onClick={async () => {
+                  <button onClick={async () => {
+                    try {
                       const result = await libroDiarioApi.verificar(m.ID_movimiento)
                       if (result.tieneOrigen) {
                         setConfirmDelete({ id: m.ID_movimiento, tieneOrigen: true, moduloOrigen: result.moduloOrigen })
                       } else {
                         await libroDiarioApi.delete(m.ID_movimiento)
+                        toast('Movimiento eliminado')
                         loadAll()
                       }
-                    }}>Eliminar</button>
+                    } catch (err) {
+                      toast(err.message || 'Error al eliminar', 'error')
+                    }
+                  }}>Eliminar</button>
                   </td>
                 </tr>
               ))}

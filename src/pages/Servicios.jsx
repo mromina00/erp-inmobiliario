@@ -3,6 +3,7 @@ import { servicios as serviciosApi, boletas as boletasApi, unidades as unidadesA
 import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
+import { toast } from '../components/Toast'
 
 const emptyServicio = {
   ID_unidad: "",
@@ -111,16 +112,21 @@ function Servicios() {
 
   async function handleSubmitServicio(e) {
     e.preventDefault();
-    if (editingServicioId) {
-      await serviciosApi.update(editingServicioId, formServicio);
-    } else {
-      const id = "SP-" + Date.now();
-      await serviciosApi.create(formServicio);
+    try {
+      if (editingServicioId) {
+        await serviciosApi.update(editingServicioId, formServicio);
+        toast('Servicio actualizado correctamente');
+      } else {
+        await serviciosApi.create(formServicio);
+        toast('Servicio creado correctamente');
+      }
+      setShowFormServicio(false);
+      setFormServicio(emptyServicio);
+      setEditingServicioId(null);
+      loadServicios();
+    } catch (err) {
+      toast(err.message || 'Error al guardar', 'error');
     }
-    setShowFormServicio(false);
-    setFormServicio(emptyServicio);
-    setEditingServicioId(null);
-    loadServicios();
   }
 
   async function handleSubmitBoleta(e) {
@@ -129,58 +135,70 @@ function Servicios() {
       ...formBoleta,
       ID_servicio_prop: servicioActivo.ID_servicio_prop,
       Numero_Liquidacion: parseInt(formBoleta.Numero_Liquidacion) || 0,
-      Lectura_Anterior: formBoleta.Lectura_Anterior
-        ? parseFloat(formBoleta.Lectura_Anterior)
-        : null,
-      Lectura_Actual: formBoleta.Lectura_Actual
-        ? parseFloat(formBoleta.Lectura_Actual)
-        : null,
+      Lectura_Anterior: formBoleta.Lectura_Anterior ? parseFloat(formBoleta.Lectura_Anterior) : null,
+      Lectura_Actual: formBoleta.Lectura_Actual ? parseFloat(formBoleta.Lectura_Actual) : null,
       Importe: parseFloat(formBoleta.Importe),
       Fecha_Vencimiento: formBoleta.Fecha_Vencimiento + "T00:00:00.000Z",
       ID_cuenta_pago: null,
       Fecha_Pago: null,
     };
-    if (editingBoletaId) {
-      await boletasApi.update(editingBoletaId, data);
-    } else {
-      const id = "BOL-" + Date.now();
-      await boletasApi.create(data);
+    try {
+      if (editingBoletaId) {
+        await boletasApi.update(editingBoletaId, data);
+        toast('Boleta actualizada correctamente');
+      } else {
+        await boletasApi.create(data);
+        toast('Boleta creada correctamente');
+      }
+      setShowFormBoleta(false);
+      setFormBoleta(emptyBoleta);
+      setEditingBoletaId(null);
+      loadBoletas(servicioActivo.ID_servicio_prop);
+    } catch (err) {
+      toast(err.message || 'Error al guardar la boleta', 'error');
     }
-    setShowFormBoleta(false);
-    setFormBoleta(emptyBoleta);
-    setEditingBoletaId(null);
-    loadBoletas(servicioActivo.ID_servicio_prop);
   }
 
   async function handlePagar(boleta) {
     const esInquilino = boleta.Responsable_Pago === "INQUILINO";
     if (!pagoForm.fecha) {
-      alert("Ingresá la fecha de pago");
+      toast('Ingresá la fecha de pago', 'warn');
       return;
     }
     if (!esInquilino && (!pagoForm.cuentaId || !pagoForm.medio)) {
-      alert("Completá cuenta y medio de pago");
+      toast('Completá cuenta y medio de pago', 'warn');
       return;
     }
-    await boletasApi.pagar(
-      boleta.ID_boleta,
-      pagoForm.cuentaId || null,
-      pagoForm.fecha + "T00:00:00.000Z",
-      pagoForm.medio || null,
-      boleta.Responsable_Pago
-    );
-    setPagandoId(null);
-    setPagoForm({ cuentaId: "", fecha: "", medio: "" });
-    loadBoletas(servicioActivo.ID_servicio_prop);
+    try {
+      await boletasApi.pagar(
+        boleta.ID_boleta,
+        pagoForm.cuentaId || null,
+        pagoForm.fecha + "T00:00:00.000Z",
+        pagoForm.medio || null,
+        boleta.Responsable_Pago
+      );
+      toast('Pago registrado correctamente');
+      setPagandoId(null);
+      setPagoForm({ cuentaId: "", fecha: "", medio: "" });
+      loadBoletas(servicioActivo.ID_servicio_prop);
+    } catch (err) {
+      toast(err.message || 'Error al registrar el pago', 'error');
+    }
   }
 
   async function handleDeleteServicio(id) {
     setConfirmModal({
       mensaje: '¿Eliminar este servicio? Se eliminarán también todas sus boletas.',
       onConfirmar: async () => {
-        await serviciosApi.delete(id)
-        setConfirmModal(null)
-        loadServicios()
+        try {
+          await serviciosApi.delete(id);
+          toast('Servicio eliminado');
+          setConfirmModal(null);
+          loadServicios();
+        } catch (err) {
+          toast(err.message || 'Error al eliminar', 'error');
+          setConfirmModal(null);
+        }
       },
     })
   }
@@ -189,9 +207,15 @@ function Servicios() {
     setConfirmModal({
       mensaje: '¿Eliminar esta boleta?',
       onConfirmar: async () => {
-        await boletasApi.delete(id)
-        setConfirmModal(null)
-        loadBoletas(servicioActivo.ID_servicio_prop)
+        try {
+          await boletasApi.delete(id);
+          toast('Boleta eliminada');
+          setConfirmModal(null);
+          loadBoletas(servicioActivo.ID_servicio_prop);
+        } catch (err) {
+          toast(err.message || 'Error al eliminar', 'error');
+          setConfirmModal(null);
+        }
       },
     })
   }

@@ -4,6 +4,7 @@ import AccionesMenu from '../components/AccionesMenu'
 import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
+import { toast } from '../components/Toast'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -119,40 +120,47 @@ function Tarjetas() {
       Limite_Credito: formTarjeta.Limite_Credito ? parseFloat(formTarjeta.Limite_Credito) : null,
       ID_cuenta_debito: formTarjeta.ID_cuenta_debito || null,
     }
-    if (editingTarjetaId) {
-      await tarjetasApi.update(editingTarjetaId, data)
-    } else {
-      await tarjetasApi.create(data)
+    try {
+      if (editingTarjetaId) {
+        await tarjetasApi.update(editingTarjetaId, data)
+        toast('Tarjeta actualizada correctamente')
+      } else {
+        await tarjetasApi.create(data)
+        toast('Tarjeta creada correctamente')
+      }
+      setShowFormTarjeta(false)
+      setFormTarjeta(emptyTarjeta)
+      setEditingTarjetaId(null)
+      loadTarjetas()
+    } catch (err) {
+      toast(err.message || 'Error al guardar', 'error')
     }
-    setShowFormTarjeta(false)
-    setFormTarjeta(emptyTarjeta)
-    setEditingTarjetaId(null)
-    loadTarjetas()
   }
 
   async function handleSubmitGasto(e) {
     e.preventDefault()
-    const monto = parseFloat(formGasto.Monto_Total_Operacion)
-    const cuotas = parseInt(formGasto.Cuotas_Totales)
     const data = {
-      ID_gasto: 'GAS-' + Date.now(),
       ID_tarjeta: tarjetaActiva.ID_tarjeta,
       Fecha_Compra: formGasto.Fecha_Compra + 'T00:00:00.000Z',
       Detalle_Lugar: formGasto.Detalle_Lugar,
-      Monto_Total_Operacion: monto,
-      Cuotas_Totales: cuotas,
+      Monto_Total_Operacion: parseFloat(formGasto.Monto_Total_Operacion),
+      Cuotas_Totales: parseInt(formGasto.Cuotas_Totales),
       Notas: formGasto.Notas || null,
     }
-    await gastosApi.create(data)
-    setShowFormGasto(false)
-    setFormGasto(emptyGasto)
-    loadDetalle(tarjetaActiva.ID_tarjeta)
+    try {
+      await gastosApi.create(data)
+      toast('Gasto registrado correctamente')
+      setShowFormGasto(false)
+      setFormGasto(emptyGasto)
+      loadDetalle(tarjetaActiva.ID_tarjeta)
+    } catch (err) {
+      toast(err.message || 'Error al guardar el gasto', 'error')
+    }
   }
 
   async function handleSubmitResumen(e) {
     e.preventDefault()
     const data = {
-      ID_resumen: 'RES-' + Date.now(),
       ID_tarjeta_titular: tarjetaActiva.ID_tarjeta,
       Fecha_Cierre: formResumen.Fecha_Cierre + 'T00:00:00.000Z',
       Fecha_Vencimiento: formResumen.Fecha_Vencimiento + 'T00:00:00.000Z',
@@ -164,36 +172,52 @@ function Tarjetas() {
       ID_estado_resumen: formResumen.ID_estado_resumen,
       Conciliado: false,
     }
-    await resumenesApi.create(data)
-    setShowFormResumen(false)
-    setFormResumen(emptyResumen)
-    loadDetalle(tarjetaActiva.ID_tarjeta)
+    try {
+      await resumenesApi.create(data)
+      toast('Resumen creado correctamente')
+      setShowFormResumen(false)
+      setFormResumen(emptyResumen)
+      loadDetalle(tarjetaActiva.ID_tarjeta)
+    } catch (err) {
+      toast(err.message || 'Error al guardar el resumen', 'error')
+    }
   }
 
   async function handlePagarResumen(resumenId) {
     if (!pagoForm.cuentaId || !pagoForm.fecha || !pagoForm.monto || !pagoForm.medio) {
-      alert('Completá todos los campos de pago')
+      toast('Completá todos los campos de pago', 'warn')
       return
     }
-    await resumenesApi.pagar(
-      resumenId,
-      pagoForm.cuentaId,
-      pagoForm.fecha + 'T00:00:00.000Z',
-      parseFloat(pagoForm.monto),
-      pagoForm.medio
-    )
-    setPagandoResumenId(null)
-    setPagoForm({ cuentaId: '', fecha: '', monto: '', medio: '' })
-    loadDetalle(tarjetaActiva.ID_tarjeta)
+    try {
+      await resumenesApi.pagar(
+        resumenId,
+        pagoForm.cuentaId,
+        pagoForm.fecha + 'T00:00:00.000Z',
+        parseFloat(pagoForm.monto),
+        pagoForm.medio
+      )
+      toast('Pago registrado correctamente')
+      setPagandoResumenId(null)
+      setPagoForm({ cuentaId: '', fecha: '', monto: '', medio: '' })
+      loadDetalle(tarjetaActiva.ID_tarjeta)
+    } catch (err) {
+      toast(err.message || 'Error al registrar el pago', 'error')
+    }
   }
 
-async function handleDeleteTarjeta(id) {
+  async function handleDeleteTarjeta(id) {
     setConfirmModal({
       mensaje: '¿Eliminar esta tarjeta? Se eliminarán también todos sus gastos, cuotas y resúmenes.',
       onConfirmar: async () => {
-        await tarjetasApi.delete(id)
-        setConfirmModal(null)
-        loadTarjetas()
+        try {
+          await tarjetasApi.delete(id)
+          toast('Tarjeta eliminada')
+          setConfirmModal(null)
+          loadTarjetas()
+        } catch (err) {
+          toast(err.message || 'Error al eliminar', 'error')
+          setConfirmModal(null)
+        }
       },
     })
   }
@@ -202,23 +226,28 @@ async function handleDeleteTarjeta(id) {
     setConfirmModal({
       mensaje: '¿Eliminar este gasto y todas sus cuotas?',
       onConfirmar: async () => {
-        await gastosApi.delete(id)
-        setConfirmModal(null)
-        loadDetalle(tarjetaActiva.ID_tarjeta)
+        try {
+          await gastosApi.delete(id)
+          toast('Gasto eliminado')
+          setConfirmModal(null)
+          loadDetalle(tarjetaActiva.ID_tarjeta)
+        } catch (err) {
+          toast(err.message || 'Error al eliminar', 'error')
+          setConfirmModal(null)
+        }
       },
     })
   }
 
   async function handleDeleteResumen(id) {
-    if (!confirm('¿Eliminar este resumen?')) return
-    await resumenesApi.delete(id)
-    loadDetalle(tarjetaActiva.ID_tarjeta)
-  }
-
-  function abrirTarjeta(tarjeta) {
-    setTarjetaActiva(tarjeta)
-    setVista('gastos')
-    loadDetalle(tarjeta.ID_tarjeta)
+    try {
+      if (!confirm('¿Eliminar este resumen?')) return
+      await resumenesApi.delete(id)
+      toast('Resumen eliminado')
+      loadDetalle(tarjetaActiva.ID_tarjeta)
+    } catch (err) {
+      toast(err.message || 'Error al eliminar', 'error')
+    }
   }
 
   // VISTA DETALLE
