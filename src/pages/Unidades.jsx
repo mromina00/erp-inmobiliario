@@ -249,7 +249,7 @@ function Unidades() {
         </div>
       ) : (
         <div className="units-grid">
-          {unidades.map((u) => {
+          {[...unidades].sort((a, b) => a.Nombre_Unidad.localeCompare(b.Nombre_Unidad, 'es')).map((u) => {
             const badge = estadoBadge(u)
             const inquilino = u.contratos?.[0]?.inquilino?.Nombre
             return (

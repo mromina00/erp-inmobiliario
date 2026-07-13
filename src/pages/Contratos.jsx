@@ -192,7 +192,7 @@ function Contratos() {
               Unidad
               <select name="ID_unidad" value={form.ID_unidad} onChange={handleChange} required>
                 <option value="">Seleccionar...</option>
-                {unidades.map((u) => (
+                {[...unidades].sort((a, b) => a.Nombre_Unidad.localeCompare(b.Nombre_Unidad, 'es')).map((u) => (
                   <option key={u.ID_unidad} value={u.ID_unidad}>
                     {u.Nombre_Unidad} {u.edificio ? `(${u.edificio.Nombre})` : ''}
                   </option>
