@@ -6,6 +6,7 @@ import ConfirmModal from '../components/ConfirmModal'
 import MontoInput, { parseMonto } from '../components/MontoInput'
 import LoadingButton from '../components/LoadingButton'
 import { toast } from '../components/Toast'
+import { validarFormulario, validarRequerido, validarFecha, validarMonto } from '../utils/validaciones'
 
 const emptyForm = {
   ID_unidad: '',
@@ -126,6 +127,23 @@ function Contratos() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+    
+    const errores = validarFormulario({
+      ID_unidad: validarRequerido(form.ID_unidad, 'Unidad'),
+      ID_persona_inquilino: validarRequerido(form.ID_persona_inquilino, 'Inquilino'),
+      Fecha_Inicio: validarFecha(form.Fecha_Inicio, { requerido: true, label: 'Fecha de inicio' }),
+      Duracion_anos: validarRequerido(form.Duracion_anos, 'Duración'),
+      Monto_Alquiler_Inicial: validarMonto(form.Monto_Alquiler_Inicial, { requerido: true, label: 'Monto alquiler' }),
+      Monto_Expensas_Inicial: validarMonto(form.Monto_Expensas_Inicial, { requerido: true, label: 'Monto expensas' }),
+      ID_estado_contrato: validarRequerido(form.ID_estado_contrato, 'Estado del contrato'),
+    })
+
+    if (Object.keys(errores).length > 0) {
+      const mensajes = Object.values(errores).join(' · ')
+      toast(mensajes, 'error')
+      return
+    }
+
     const data = {
       ID_unidad: form.ID_unidad,
       ID_persona_inquilino: form.ID_persona_inquilino,
@@ -141,6 +159,7 @@ function Contratos() {
       ID_estado_contrato: form.ID_estado_contrato,
       Notas: form.Notas || null,
     }
+
     try {
       if (editingId) {
         await contratosApi.update(editingId, data, garantesSeleccionados)
