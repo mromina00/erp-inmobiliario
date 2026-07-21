@@ -161,7 +161,7 @@ function Unidades() {
 
           <div className="form-grid">
             <label>
-              Nombre de la unidad
+              <span>Nombre de la unidad <span className="req">*</span></span>
               <input name="Nombre_Unidad" value={form.Nombre_Unidad} onChange={handleChange} required />
             </label>
 
@@ -176,7 +176,7 @@ function Unidades() {
             </label>
 
             <label>
-              Tipo
+              <span>Tipo <span className="req">*</span></span>
               <select name="ID_tipo" value={form.ID_tipo} onChange={handleChange} required>
                 <option value="">Seleccionar...</option>
                 {tipos.map((t) => (
@@ -186,7 +186,7 @@ function Unidades() {
             </label>
 
             <label>
-              Perfil de cobro
+              <span>Perfil de cobro <span className="req">*</span></span>
               <select name="ID_perfil" value={form.ID_perfil} onChange={handleChange} required>
                 <option value="">Seleccionar...</option>
                 {perfiles.map((p) => (
@@ -221,7 +221,7 @@ function Unidades() {
             </label>
 
             <label>
-              Dirección
+              <span>Dirección <span className="req">*</span></span>
               <input name="Direccion" value={form.Direccion} onChange={handleChange} required />
             </label>
           </div>

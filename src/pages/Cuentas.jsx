@@ -120,11 +120,11 @@ function Cuentas() {
           <p className="card-title">{editingId ? 'Editar cuenta' : 'Nueva cuenta'}</p>
           <div className="form-grid">
             <label>
-              Nombre de la cuenta
+              <span>Nombre de la cuenta <span className="req">*</span></span>
               <input name="Nombre_Cuenta" value={form.Nombre_Cuenta} onChange={handleChange} required />
             </label>
             <label>
-              Tipo
+              <span>Tipo <span className="req">*</span></span>
               <select name="ID_tipo_cuenta" value={form.ID_tipo_cuenta} onChange={handleChange} required>
                 <option value="">Seleccionar...</option>
                 {tipos.map((t) => (
@@ -133,7 +133,7 @@ function Cuentas() {
               </select>
             </label>
             <label>
-              Moneda
+              <span>Moneda <span className="req">*</span></span>
               <select name="ID_moneda" value={form.ID_moneda} onChange={handleChange} required>
                 <option value="">Seleccionar...</option>
                 {monedas.map((m) => (

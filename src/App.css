@@ -533,3 +533,10 @@ input::placeholder {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* Indicador de campo requerido */
+.req {
+  color: #c0392b;
+  font-weight: 600;
+  margin-left: 2px;
+}

@@ -171,11 +171,11 @@ function Vencimientos() {
           <p className="card-title">{editingId ? 'Editar vencimiento' : 'Nuevo vencimiento'}</p>
           <div className="form-grid">
             <label>
-              Fecha de vencimiento
+              <span>Fecha de vencimiento <span className="req">*</span></span>
               <input type="date" value={form.Fecha_Vencimiento} onChange={(e) => setForm({ ...form, Fecha_Vencimiento: e.target.value })} required />
             </label>
             <label>
-              Detalle
+              <span>Detalle <span className="req">*</span></span>
               <input value={form.Detalle} onChange={(e) => setForm({ ...form, Detalle: e.target.value })} required />
             </label>
             <MontoInput

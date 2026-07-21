@@ -515,11 +515,11 @@ function Tarjetas() {
           <p className="card-title">{editingTarjetaId ? 'Editar tarjeta' : 'Nueva tarjeta'}</p>
           <div className="form-grid">
             <label>
-              Nombre comercial
+              <span>Nombre comercial <span className="req">*</span></span>
               <input value={formTarjeta.Nombre_Comercial} onChange={(e) => setFormTarjeta({ ...formTarjeta, Nombre_Comercial: e.target.value })} required />
             </label>
             <label>
-              Marca
+              <span>Marca <span className="req">*</span></span>
               <select value={formTarjeta.ID_marca_tarjeta} onChange={(e) => setFormTarjeta({ ...formTarjeta, ID_marca_tarjeta: e.target.value })} required>
                 <option value="">Seleccionar...</option>
                 {marcas.map((m) => (

@@ -46,7 +46,7 @@ function SelectorPersona({ label, value, onChange, personas, onPersonaCreada, re
 
   return (
     <label style={{ display: 'block' }}>
-      {label}{required && ' *'}
+      <span>{label}{required && <span className="req"> *</span>}</span>
       <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
         <select
           value={value}

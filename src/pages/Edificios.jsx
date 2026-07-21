@@ -91,7 +91,7 @@ function Edificios() {
         <form onSubmit={handleSubmit} className="card" style={{ marginBottom: '1.5rem' }}>
           <p className="card-title">{editingId ? 'Editar edificio' : 'Nuevo edificio'}</p>
           <label>
-            Nombre
+            <span>Nombre <span className="req">*</span></span>
             <input name="Nombre" value={form.Nombre} onChange={handleChange} required />
           </label>
           <label>

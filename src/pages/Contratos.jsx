@@ -189,7 +189,7 @@ function Contratos() {
 
           <div className="form-grid">
             <label>
-              Unidad
+              <span>Unidad <span className="req">*</span></span>
               <select name="ID_unidad" value={form.ID_unidad} onChange={handleChange} required>
                 <option value="">Seleccionar...</option>
                 {[...unidades].sort((a, b) => a.Nombre_Unidad.localeCompare(b.Nombre_Unidad, 'es')).map((u) => (
@@ -220,12 +220,12 @@ function Contratos() {
             />
 
             <label>
-              Fecha de inicio
+              <span>Fecha de inicio <span className="req">*</span></span>
               <input name="Fecha_Inicio" type="date" value={form.Fecha_Inicio} onChange={handleChange} required />
             </label>
 
             <label>
-              Duración (años)
+              <span>Duración (años) <span className="req">*</span></span>
               <input name="Duracion_anos" type="number" value={form.Duracion_anos} onChange={handleChange} required />
             </label>
 
@@ -271,7 +271,7 @@ function Contratos() {
             </label>
 
             <label>
-              Periodicidad de actualización
+              <span>Periodicidad de actualización <span className="req">*</span></span>
               <select name="ID_periodicidad" value={form.ID_periodicidad} onChange={handleChange}>
                 <option value="">Sin definir</option>
                 {periodicidades.map((p) => (
@@ -281,7 +281,7 @@ function Contratos() {
             </label>
 
             <label>
-              Estado del contrato
+              <span>Estado del contrato <span className="req">*</span></span>
               <select name="ID_estado_contrato" value={form.ID_estado_contrato} onChange={handleChange} required>
                 <option value="">Seleccionar...</option>
                 {estados.map((e) => (

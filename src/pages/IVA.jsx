@@ -268,14 +268,14 @@ function IVA() {
                   required
                 />
                 <label>
-                  Tipo de comprobante
+                  <span>Tipo de comprobante <span className="req">*</span></span>
                   <select value={formCompra.ID_tipo_comprobante} onChange={(e) => setFormCompra({ ...formCompra, ID_tipo_comprobante: e.target.value })} required>
                     <option value="">Seleccionar...</option>
                     {tiposComprobante.map((t) => <option key={t.ID_tipo_comprobante} value={t.ID_tipo_comprobante}>{t.Descripcion}</option>)}
                   </select>
                 </label>
                 <label>
-                  Número de factura
+                  <span>Número de factura <span className="req">*</span></span>
                   <input
                     value={formCompra.Factura_Numero}
                     onChange={(e) => setFormCompra({ ...formCompra, Factura_Numero: formatFactura(e.target.value) })}
@@ -284,7 +284,7 @@ function IVA() {
                   />
                 </label>
                 <label>
-                  Fecha de factura
+                  <span>Fecha de factura <span className="req">*</span></span>
                   <input type="date" value={formCompra.Fecha_Factura} onChange={(e) => setFormCompra({ ...formCompra, Fecha_Factura: e.target.value })} required />
                 </label>
                 <MontoInput label="Neto gravado 21%" value={formCompra.Neto_Gravado_21} onChange={(v) => setFormCompra({ ...formCompra, Neto_Gravado_21: v })} />

@@ -15,7 +15,7 @@ function MontoInput({ label, value, onChange, required = false, style = {} }) {
   
     return (
       <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '13px', color: '#555', ...style }}>
-        {label}
+        <span>{label}{required && <span className="req"> *</span>}</span>
         <div style={{ position: 'relative' }}>
           <span style={{ position: 'absolute', left: '9px', top: '50%', transform: 'translateY(-50%)', color: '#888', fontSize: '14px' }}>$</span>
           <input

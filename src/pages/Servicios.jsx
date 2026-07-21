@@ -272,7 +272,7 @@ function Servicios() {
             </p>
             <div className="form-grid">
               <label>
-                Período (AAAA-MM)
+                <span>Período (AAAA-MM) <span className="req">*</span></span>
                 <input
                   name="Periodo"
                   value={formBoleta.Periodo}
@@ -291,7 +291,7 @@ function Servicios() {
                 />
               </label>
               <label>
-                Fecha vencimiento
+                <span>Fecha vencimiento <span className="req">*</span></span>
                 <input
                   name="Fecha_Vencimiento"
                   type="date"
@@ -301,7 +301,7 @@ function Servicios() {
                 />
               </label>
               <label>
-                Importe
+                <span>Importe <span className="req">*</span></span>
                 <input
                   name="Importe"
                   type="number"
@@ -332,7 +332,7 @@ function Servicios() {
                 />
               </label>
               <label>
-                Responsable de pago
+                <span>Responsable de pago <span className="req">*</span></span>
                 <select
                   name="Responsable_Pago"
                   value={formBoleta.Responsable_Pago}
@@ -558,7 +558,7 @@ function Servicios() {
           </p>
           <div className="form-grid">
             <label>
-              Unidad
+              <span>Unidad <span className="req">*</span></span>
               <select
                 name="ID_unidad"
                 value={formServicio.ID_unidad}
@@ -575,7 +575,7 @@ function Servicios() {
               </select>
             </label>
             <label>
-              Tipo de servicio
+              <span>Tipo de servicio <span className="req">*</span></span>
               <select
                 name="ID_tipo_servicio"
                 value={formServicio.ID_tipo_servicio}
@@ -591,7 +591,7 @@ function Servicios() {
               </select>
             </label>
             <label>
-              Empresa prestadora
+              <span>Empresa prestadora <span className="req">*</span></span>
               <input
                 name="Empresa_Prestadora"
                 value={formServicio.Empresa_Prestadora}

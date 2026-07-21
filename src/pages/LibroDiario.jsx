@@ -124,18 +124,18 @@ function LibroDiario() {
           <p className="card-title">Nuevo movimiento manual</p>
           <div className="form-grid">
             <label>
-              Fecha
+              <span>Fecha <span className="req">*</span></span>
               <input type="date" value={form.Fecha} onChange={(e) => setForm({ ...form, Fecha: e.target.value })} required />
             </label>
             <label>
-              Cuenta
+              <span>Cuenta <span className="req">*</span></span>
               <select value={form.ID_cuenta} onChange={(e) => setForm({ ...form, ID_cuenta: e.target.value })} required>
                 <option value="">Seleccionar...</option>
                 {cuentas.map((c) => <option key={c.ID_cuenta} value={c.ID_cuenta}>{c.Nombre_Cuenta}</option>)}
               </select>
             </label>
             <label>
-              Tipo
+              <span>Tipo <span className="req">*</span></span>
               <select value={form.esEgreso} onChange={(e) => setForm({ ...form, esEgreso: e.target.value === 'true' })} required>
                 <option value="false">Ingreso</option>
                 <option value="true">Egreso</option>
@@ -148,14 +148,14 @@ function LibroDiario() {
               required
             />
             <label>
-              Medio de pago
+              <span>Medio de pago <span className="req">*</span></span>
               <select value={form.ID_medio_pago} onChange={(e) => setForm({ ...form, ID_medio_pago: e.target.value })} required>
                 <option value="">Seleccionar...</option>
                 {mediosPago.map((m) => <option key={m.ID_medio} value={m.ID_medio}>{m.Descripcion}</option>)}
               </select>
             </label>
             <label>
-              Categoría
+              <span>Categoría <span className="req">*</span></span>
               <select value={form.ID_subcategoria_flujo} onChange={(e) => setForm({ ...form, ID_subcategoria_flujo: e.target.value })} required>
                 <option value="">Seleccionar...</option>
                 {subcategorias.map((s) => <option key={s.ID_subcat} value={s.ID_subcat}>{s.Descripcion}</option>)}
@@ -171,7 +171,7 @@ function LibroDiario() {
             />
           </div>
           <label style={{ display: 'block', marginTop: '12px' }}>
-            Detalle
+            <span>Detalle <span className="req">*</span></span>
             <input value={form.Detalle} onChange={(e) => setForm({ ...form, Detalle: e.target.value })} required />
           </label>
           <div style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>

@@ -3,6 +3,7 @@ import { personas as personasApi, catalogos } from '../services/api'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
 import { toast } from '../components/Toast'
+import { validarFormulario, validarRequerido, validarDocumento, validarEmail } from '../utils/validaciones'
 
 const emptyForm = {
   ID_persona: '',
@@ -99,28 +100,45 @@ function Personas() {
   }
 
   async function handleSubmit(e) {
-    e.preventDefault()
-    const data = { ...form }
-    delete data.ID_persona
-    if (form.ID_rol_persona !== 'INQUILINO') {
-      data.ID_estado_persona = 'ACTIVO'
-    }
-    try {
-      if (editingId) {
-        await personasApi.update(editingId, data)
-        toast('Persona actualizada correctamente')
-      } else {
-        await personasApi.create(data)
-        toast('Persona creada correctamente')
-      }
-      setShowForm(false)
-      setForm(emptyForm)
-      setEditingId(null)
-      loadAll()
-    } catch (err) {
-      toast(err.message || 'Error al guardar', 'error')
-    }
+  e.preventDefault()
+  
+  // Validaciones
+  const errores = validarFormulario({
+    Nombre: validarRequerido(form.Nombre, 'Nombre'),
+    ID_tipo_doc: validarRequerido(form.ID_tipo_doc, 'Tipo de documento'),
+    Documento: validarDocumento(form.Documento, form.ID_tipo_doc, form.ID_tipo_persona),
+    ID_tipo_persona: validarRequerido(form.ID_tipo_persona, 'Tipo de persona'),
+    ID_rol_persona: validarRequerido(form.ID_rol_persona, 'Rol'),
+    Email: validarEmail(form.Email),
+  })
+
+  if (Object.keys(errores).length > 0) {
+    const mensajes = Object.values(errores).join(' · ')
+    toast(mensajes, 'error')
+    return
   }
+
+  const data = { ...form }
+  delete data.ID_persona
+  if (form.ID_rol_persona !== 'INQUILINO') {
+    data.ID_estado_persona = 'ACTIVO'
+  }
+  try {
+    if (editingId) {
+      await personasApi.update(editingId, data)
+      toast('Persona actualizada correctamente')
+    } else {
+      await personasApi.create(data)
+      toast('Persona creada correctamente')
+    }
+    setShowForm(false)
+    setForm(emptyForm)
+    setEditingId(null)
+    loadAll()
+  } catch (err) {
+    toast(err.message || 'Error al guardar', 'error')
+  }
+}
 
   const [confirmModal, setConfirmModal] = useState(null)
 
@@ -156,12 +174,12 @@ function Personas() {
 
           <div className="form-grid">
             <label>
-              Nombre
+              <span>Nombre <span className="req">*</span></span>
               <input name="Nombre" value={form.Nombre} onChange={handleChange} required />
             </label>
 
             <label>
-              Tipo de documento
+              <span>Tipo de documento <span className="req">*</span></span>
               <select name="ID_tipo_doc" value={form.ID_tipo_doc} onChange={handleChange} required>
                 <option value="">Seleccionar...</option>
                 {tiposDoc.map((t) => (
@@ -171,7 +189,7 @@ function Personas() {
             </label>
 
             <label>
-              Número de documento
+              <span>Número de documento <span className="req">*</span></span>
               <input
                 name="Documento"
                 value={form.Documento}
@@ -181,7 +199,7 @@ function Personas() {
             </label>
 
             <label>
-              Tipo de persona
+              <span>Tipo de persona <span className="req">*</span></span>
               <select name="ID_tipo_persona" value={form.ID_tipo_persona} onChange={handleChange} required>
                 <option value="">Seleccionar...</option>
                 {tiposPersona.map((t) => (
@@ -191,7 +209,7 @@ function Personas() {
             </label>
 
             <label>
-              Rol
+              <span>Rol <span className="req">*</span></span>
               <select name="ID_rol_persona" value={form.ID_rol_persona} onChange={handleChange} required>
                 <option value="">Seleccionar...</option>
                 {roles.map((r) => (
