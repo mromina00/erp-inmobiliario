@@ -4,6 +4,7 @@ import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
 import { toast } from '../components/Toast'
+import { validarFormulario, validarRequerido, validarFecha } from '../utils/validaciones'
 
 const emptyServicio = {
   ID_unidad: "",
@@ -112,6 +113,19 @@ function Servicios() {
 
   async function handleSubmitServicio(e) {
     e.preventDefault();
+
+    const errores = validarFormulario({
+      ID_unidad: validarRequerido(formServicio.ID_unidad, 'Unidad'),
+      ID_tipo_servicio: validarRequerido(formServicio.ID_tipo_servicio, 'Tipo de servicio'),
+      Empresa_Prestadora: validarRequerido(formServicio.Empresa_Prestadora, 'Empresa prestadora'),
+      ID_persona_titular: validarRequerido(formServicio.ID_persona_titular, 'Titular'),
+    })
+
+    if (Object.keys(errores).length > 0) {
+      toast(Object.values(errores).join(' · '), 'error');
+      return;
+    }
+
     try {
       if (editingServicioId) {
         await serviciosApi.update(editingServicioId, formServicio);
@@ -131,6 +145,19 @@ function Servicios() {
 
   async function handleSubmitBoleta(e) {
     e.preventDefault();
+
+    const errores = validarFormulario({
+      Periodo: validarRequerido(formBoleta.Periodo, 'Período'),
+      Fecha_Vencimiento: validarFecha(formBoleta.Fecha_Vencimiento, { requerido: true, label: 'Fecha de vencimiento' }),
+      Importe: validarRequerido(formBoleta.Importe, 'Importe'),
+      Responsable_Pago: validarRequerido(formBoleta.Responsable_Pago, 'Responsable de pago'),
+    })
+
+    if (Object.keys(errores).length > 0) {
+      toast(Object.values(errores).join(' · '), 'error');
+      return;
+    }
+
     const data = {
       ...formBoleta,
       ID_servicio_prop: servicioActivo.ID_servicio_prop,

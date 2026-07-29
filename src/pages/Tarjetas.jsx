@@ -5,6 +5,7 @@ import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
 import { toast } from '../components/Toast'
+import { validarFormulario, validarRequerido, validarFecha } from '../utils/validaciones'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -114,6 +115,18 @@ function Tarjetas() {
 
   async function handleSubmitTarjeta(e) {
     e.preventDefault()
+
+    const errores = validarFormulario({
+      Nombre_Comercial: validarRequerido(formTarjeta.Nombre_Comercial, 'Nombre comercial'),
+      ID_marca_tarjeta: validarRequerido(formTarjeta.ID_marca_tarjeta, 'Marca'),
+      ID_persona_usuario: validarRequerido(formTarjeta.ID_persona_usuario, 'Usuario / Titular'),
+    })
+
+    if (Object.keys(errores).length > 0) {
+      toast(Object.values(errores).join(' · '), 'error')
+      return
+    }
+
     const data = {
       ...formTarjeta,
       ID_tarjeta_principal: formTarjeta.ID_tarjeta_principal || null,
@@ -139,6 +152,18 @@ function Tarjetas() {
 
   async function handleSubmitGasto(e) {
     e.preventDefault()
+
+    const errores = validarFormulario({
+      Fecha_Compra: validarFecha(formGasto.Fecha_Compra, { requerido: true, label: 'Fecha de compra' }),
+      Detalle_Lugar: validarRequerido(formGasto.Detalle_Lugar, 'Detalle / Lugar'),
+      Monto_Total_Operacion: validarRequerido(formGasto.Monto_Total_Operacion, 'Monto total'),
+    })
+
+    if (Object.keys(errores).length > 0) {
+      toast(Object.values(errores).join(' · '), 'error')
+      return
+    }
+
     const data = {
       ID_tarjeta: tarjetaActiva.ID_tarjeta,
       Fecha_Compra: formGasto.Fecha_Compra + 'T00:00:00.000Z',
@@ -160,6 +185,19 @@ function Tarjetas() {
 
   async function handleSubmitResumen(e) {
     e.preventDefault()
+
+    const errores = validarFormulario({
+      Fecha_Cierre: validarFecha(formResumen.Fecha_Cierre, { requerido: true, label: 'Fecha de cierre' }),
+      Fecha_Vencimiento: validarFecha(formResumen.Fecha_Vencimiento, { requerido: true, label: 'Fecha de vencimiento' }),
+      Fecha_Proximo_Cierre: validarFecha(formResumen.Fecha_Proximo_Cierre, { requerido: true, label: 'Próximo cierre' }),
+      Fecha_Proximo_Vencimiento: validarFecha(formResumen.Fecha_Proximo_Vencimiento, { requerido: true, label: 'Próximo vencimiento' }),
+    })
+
+    if (Object.keys(errores).length > 0) {
+      toast(Object.values(errores).join(' · '), 'error')
+      return
+    }
+
     const data = {
       ID_tarjeta_titular: tarjetaActiva.ID_tarjeta,
       Fecha_Cierre: formResumen.Fecha_Cierre + 'T00:00:00.000Z',

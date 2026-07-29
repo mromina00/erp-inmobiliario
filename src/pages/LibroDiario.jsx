@@ -4,6 +4,7 @@ import SelectorPersona from '../components/SelectorPersona'
 import MontoInput, { parseMonto } from '../components/MontoInput'
 import LoadingButton from '../components/LoadingButton'
 import { toast } from '../components/Toast'
+import { validarFormulario, validarRequerido, validarFecha, validarMonto } from '../utils/validaciones'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -58,6 +59,21 @@ function LibroDiario() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+
+    const errores = validarFormulario({
+      Fecha: validarFecha(form.Fecha, { requerido: true, label: 'Fecha' }),
+      ID_cuenta: validarRequerido(form.ID_cuenta, 'Cuenta'),
+      Monto: validarMonto(form.Monto, { requerido: true, label: 'Monto' }),
+      ID_medio_pago: validarRequerido(form.ID_medio_pago, 'Medio de pago'),
+      ID_subcategoria_flujo: validarRequerido(form.ID_subcategoria_flujo, 'Categoría'),
+      Detalle: validarRequerido(form.Detalle, 'Detalle'),
+    })
+
+    if (Object.keys(errores).length > 0) {
+      toast(Object.values(errores).join(' · '), 'error')
+      return
+    }
+
     const montoRaw = parseMonto(form.Monto) || 0
     const monto = form.esEgreso ? -Math.abs(montoRaw) : Math.abs(montoRaw)
     try {
