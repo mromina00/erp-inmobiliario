@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
 import { toast } from '../components/Toast'
+import { validarFormulario, validarRequerido } from '../utils/validaciones'
 
 const emptyForm = {
   Nombre_Unidad: '',
@@ -104,6 +105,20 @@ function Unidades() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+
+    const errores = validarFormulario({
+      Nombre_Unidad: validarRequerido(form.Nombre_Unidad, 'Nombre de la unidad'),
+      ID_tipo: validarRequerido(form.ID_tipo, 'Tipo'),
+      ID_perfil: validarRequerido(form.ID_perfil, 'Perfil de cobro'),
+      ID_estado: validarRequerido(form.ID_estado, 'Estado'),
+      Direccion: validarRequerido(form.Direccion, 'Dirección'),
+    })
+
+    if (Object.keys(errores).length > 0) {
+      toast(Object.values(errores).join(' · '), 'error')
+      return
+    }
+
     const data = {
       ...form,
       ID_edificio: form.ID_edificio || null,

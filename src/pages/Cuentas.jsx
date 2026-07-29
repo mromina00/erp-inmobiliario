@@ -4,6 +4,7 @@ import SelectorPersona from '../components/SelectorPersona'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
 import { toast } from '../components/Toast'
+import { validarFormulario, validarRequerido } from '../utils/validaciones'
 
 const emptyForm = {
   Nombre_Cuenta: '',
@@ -74,6 +75,19 @@ function Cuentas() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+
+    const errores = validarFormulario({
+      Nombre_Cuenta: validarRequerido(form.Nombre_Cuenta, 'Nombre de la cuenta'),
+      ID_tipo_cuenta: validarRequerido(form.ID_tipo_cuenta, 'Tipo'),
+      ID_moneda: validarRequerido(form.ID_moneda, 'Moneda'),
+      ID_persona_titular: validarRequerido(form.ID_persona_titular, 'Titular'),
+    })
+
+    if (Object.keys(errores).length > 0) {
+      toast(Object.values(errores).join(' · '), 'error')
+      return
+    }
+
     try {
       if (editingId) {
         await cuentasApi.update(editingId, form)

@@ -4,6 +4,7 @@ import MontoInput, { parseMonto } from '../components/MontoInput'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
 import { toast } from '../components/Toast'
+import { validarFormulario, validarRequerido, validarFecha } from '../utils/validaciones'
 
 function fmtMoney(n) {
   if (!n) return '-'
@@ -67,6 +68,17 @@ function Vencimientos() {
 
   async function handleSubmit(e) {
     e.preventDefault()
+
+    const errores = validarFormulario({
+      Fecha_Vencimiento: validarFecha(form.Fecha_Vencimiento, { requerido: true, label: 'Fecha de vencimiento' }),
+      Detalle: validarRequerido(form.Detalle, 'Detalle'),
+    })
+
+    if (Object.keys(errores).length > 0) {
+      toast(Object.values(errores).join(' · '), 'error')
+      return
+    }
+
     const data = {
       Fecha_Vencimiento: form.Fecha_Vencimiento + 'T00:00:00.000Z',
       Detalle: form.Detalle,
