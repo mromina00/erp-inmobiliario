@@ -5,6 +5,7 @@ import MontoInput, { parseMonto } from '../components/MontoInput'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
 import { toast } from '../components/Toast'
+import { validarFormulario, validarRequerido, validarFecha } from '../utils/validaciones'
 
 function fmtMoney(n) {
   if (n === null || n === undefined) return '-'
@@ -93,6 +94,20 @@ function IVA() {
 
   async function handleSubmitCompra(e) {
     e.preventDefault()
+
+    const errores = validarFormulario({
+      ID_persona_empresa: validarRequerido(formCompra.ID_persona_empresa, 'Empresa'),
+      ID_persona_proveedor: validarRequerido(formCompra.ID_persona_proveedor, 'Proveedor'),
+      ID_tipo_comprobante: validarRequerido(formCompra.ID_tipo_comprobante, 'Tipo de comprobante'),
+      Factura_Numero: validarRequerido(formCompra.Factura_Numero, 'Número de factura'),
+      Fecha_Factura: validarFecha(formCompra.Fecha_Factura, { requerido: true, label: 'Fecha de factura' }),
+    })
+
+    if (Object.keys(errores).length > 0) {
+      toast(Object.values(errores).join(' · '), 'error')
+      return
+    }
+
     const total = calcularTotal(formCompra, true)
     const data = {
       ID_persona_empresa: formCompra.ID_persona_empresa,
@@ -131,6 +146,20 @@ function IVA() {
 
   async function handleSubmitVenta(e) {
     e.preventDefault()
+
+    const errores = validarFormulario({
+      ID_persona_empresa: validarRequerido(formVenta.ID_persona_empresa, 'Empresa'),
+      ID_persona_cliente: validarRequerido(formVenta.ID_persona_cliente, 'Cliente'),
+      ID_tipo_comprobante: validarRequerido(formVenta.ID_tipo_comprobante, 'Tipo de comprobante'),
+      Factura_Numero: validarRequerido(formVenta.Factura_Numero, 'Número de factura'),
+      Fecha_Factura: validarFecha(formVenta.Fecha_Factura, { requerido: true, label: 'Fecha de factura' }),
+    })
+
+    if (Object.keys(errores).length > 0) {
+      toast(Object.values(errores).join(' · '), 'error')
+      return
+    }
+
     const total = calcularTotal(formVenta, false)
     const data = {
       ID_persona_empresa: formVenta.ID_persona_empresa,
