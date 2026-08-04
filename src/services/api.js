@@ -97,6 +97,7 @@ export const unidades = {
   create:  (data)       => post('/api/unidades', data),
   update:  (id, data)   => patch(`/api/unidades/${id}`, data),
   delete:  (id)         => del(`/api/unidades/${id}`),
+  tablero: () => get('/api/unidades/tablero'),
 }
 
 // ============================================================
