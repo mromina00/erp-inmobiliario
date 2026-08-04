@@ -341,21 +341,17 @@ function Contratos() {
                   </span>
                 )
               })}
-              <select
+            </div>
+            <div style={{ marginTop: '8px', maxWidth: '320px' }}>
+              <SelectorPersona
+                label=""
                 value=""
-                onChange={(e) => {
-                  if (e.target.value) toggleGarante(e.target.value)
+                onChange={(id) => {
+                  if (id && !garantesSeleccionados.includes(id)) toggleGarante(id)
                 }}
-                style={{ fontSize: '13px', padding: '5px 8px', borderRadius: '6px', border: '1px solid #d8d8d5' }}
-              >
-                <option value="">+ Agregar garante...</option>
-                {personas
-                  .filter(p => !garantesSeleccionados.includes(p.ID_persona))
-                  .map(p => (
-                    <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>
-                  ))
-                }
-              </select>
+                personas={personas.filter(p => !garantesSeleccionados.includes(p.ID_persona))}
+                onPersonaCreada={loadAll}
+              />
             </div>
           </div>
 
