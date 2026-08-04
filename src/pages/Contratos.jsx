@@ -211,11 +211,13 @@ function Contratos() {
               <span>Unidad <span className="req">*</span></span>
               <select name="ID_unidad" value={form.ID_unidad} onChange={handleChange} required>
                 <option value="">Seleccionar...</option>
-                {[...unidades].sort((a, b) => a.Nombre_Unidad.localeCompare(b.Nombre_Unidad, 'es')).map((u) => (
-                  <option key={u.ID_unidad} value={u.ID_unidad}>
-                    {u.Nombre_Unidad} {u.edificio ? `(${u.edificio.Nombre})` : ''}
-                  </option>
-                ))}
+                {unidades
+                  .filter(u => u.ID_estado !== 'OCUPADA' || u.ID_unidad === form.ID_unidad)
+                  .map((u) => (
+                    <option key={u.ID_unidad} value={u.ID_unidad}>
+                      {u.Nombre_Unidad} {u.edificio ? `(${u.edificio.Nombre})` : ''}
+                    </option>
+                  ))}
               </select>
             </label>
 
@@ -311,31 +313,49 @@ function Contratos() {
           </div>
 
           <div style={{ marginTop: '12px' }}>
-            <p style={{ fontSize: '13px', color: '#555', margin: '0 0 6px' }}>Garantes (opcional, podés elegir varios)</p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {personas.map((p) => (
-                <label
-                  key={p.ID_persona}
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    gap: '4px',
-                    border: '1px solid #d8d8d5',
-                    borderRadius: '6px',
-                    padding: '5px 10px',
-                    fontSize: '13px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={garantesSeleccionados.includes(p.ID_persona)}
-                    onChange={() => toggleGarante(p.ID_persona)}
-                    style={{ width: 'auto' }}
-                  />
-                  {p.Nombre}
-                </label>
-              ))}
+            <p style={{ fontSize: '13px', color: '#555', margin: '0 0 8px' }}>
+              Garantes (opcional)
+            </p>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+              {garantesSeleccionados.map((id) => {
+                const p = personas.find(x => x.ID_persona === id)
+                if (!p) return null
+                return (
+                  <span key={id} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    background: '#eef0fc', color: '#3c34a5',
+                    border: '1px solid #c8cdf5', borderRadius: '20px',
+                    padding: '4px 12px', fontSize: '13px', fontWeight: 500,
+                  }}>
+                    {p.Nombre}
+                    <button
+                      type="button"
+                      onClick={() => toggleGarante(id)}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        color: '#3c34a5', fontSize: '14px', padding: '0', lineHeight: 1,
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </span>
+                )
+              })}
+              <select
+                value=""
+                onChange={(e) => {
+                  if (e.target.value) toggleGarante(e.target.value)
+                }}
+                style={{ fontSize: '13px', padding: '5px 8px', borderRadius: '6px', border: '1px solid #d8d8d5' }}
+              >
+                <option value="">+ Agregar garante...</option>
+                {personas
+                  .filter(p => !garantesSeleccionados.includes(p.ID_persona))
+                  .map(p => (
+                    <option key={p.ID_persona} value={p.ID_persona}>{p.Nombre}</option>
+                  ))
+                }
+              </select>
             </div>
           </div>
 
