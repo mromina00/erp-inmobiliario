@@ -84,6 +84,7 @@ export const edificios = {
 // ============================================================
 export const personas = {
   getAll:  ()           => get('/api/personas'),
+  tablero: () => get('/api/unidades/tablero'),
   create:  (data)       => post('/api/personas', data),
   update:  (id, data)   => patch(`/api/personas/${id}`, data),
   delete:  (id)         => del(`/api/personas/${id}`),
@@ -97,7 +98,6 @@ export const unidades = {
   create:  (data)       => post('/api/unidades', data),
   update:  (id, data)   => patch(`/api/unidades/${id}`, data),
   delete:  (id)         => del(`/api/unidades/${id}`),
-  tablero: () => get('/api/unidades/tablero'),
 }
 
 // ============================================================
