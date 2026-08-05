@@ -10,7 +10,6 @@ const sections = [
     items: [
       { label: 'Edificios y unidades', path: '/unidades' },
       { label: 'Contratos', path: '/contratos' },
-      { label: 'Cobros de alquiler', path: '/cobros' },
     ],
   },
   {
