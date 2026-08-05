@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { unidades as unidadesApi, edificios as edificiosApi, catalogos, contratos as contratosApi, periodos as periodosApi, cuentas as cuentasApi } from '../services/api'
+import { unidades as unidadesApi, edificios as edificiosApi, catalogos, contratos as contratosApi, periodos as periodosApi, cuentas as cuentasApi, cobros as cobrosApi } from '../services/api'
 import { useNavigate } from 'react-router-dom'
 import ConfirmModal from '../components/ConfirmModal'
 import LoadingButton from '../components/LoadingButton'
 import { toast } from '../components/Toast'
 import { validarFormulario, validarRequerido } from '../utils/validaciones'
+
 
 const emptyForm = {
   Nombre_Unidad: '',
@@ -47,15 +48,25 @@ function DetalleUnidad({ unidad, onVolver, edificios }) {
   const [periodos, setPeriodos] = useState([])
   const [cuentas, setCuentas] = useState([])
   const [loading, setLoading] = useState(true)
+  const [cobrando, setCobrando] = useState(null)
+  const [cobroForm, setCobroForm] = useState({
+    Monto_Pagado: '',
+    Fecha_Pago: new Date().toISOString().substring(0, 10),
+    ID_cuenta_destino: '',
+    Imputacion_Pago: 'ALQUILER',
+  })
+  const [imputaciones, setImputaciones] = useState([])
 
   useEffect(() => {
     async function load() {
       setLoading(true)
       try {
-        const [todos, ctas] = await Promise.all([
+        const [todos, ctas, imp] = await Promise.all([
           contratosApi.getAll(),
           cuentasApi.getAll(),
+          catalogos.imputaciones(),
         ])
+        setImputaciones(imp)
         const vigente = todos.find(c => c.ID_unidad === unidad.ID_unidad && c.ID_estado_contrato === 'VIGENTE')
         setCuentas(ctas)
         if (vigente) {
@@ -77,6 +88,29 @@ function DetalleUnidad({ unidad, onVolver, edificios }) {
   const periodoMes = periodos.find(p => p.Mes_Ano === mesActual)
 
   if (loading) return <div style={{ padding: '2rem' }}>Cargando...</div>
+
+  async function confirmarCobro(periodoId) {
+    if (!cobroForm.ID_cuenta_destino) {
+      toast('Elegí una cuenta destino', 'warn')
+      return
+    }
+    try {
+      await cobrosApi.create({
+        ID_periodo_contrato: periodoId,
+        Fecha_Pago: cobroForm.Fecha_Pago + 'T00:00:00.000Z',
+        Monto_Pagado: parseFloat(cobroForm.Monto_Pagado),
+        Imputacion_Pago: cobroForm.Imputacion_Pago,
+        ID_cuenta_destino: cobroForm.ID_cuenta_destino,
+      })
+      toast('Cobro registrado correctamente')
+      setCobrando(null)
+      // Recargar períodos
+      const ps = await periodosApi.getByContrato(contrato.ID_contrato)
+      setPeriodos(ps)
+    } catch (err) {
+      toast(err.message || 'Error al registrar el cobro', 'error')
+    }
+  }
 
   return (
     <div>
@@ -152,6 +186,7 @@ function DetalleUnidad({ unidad, onVolver, edificios }) {
                   <th>Recargo</th>
                   <th>Total</th>
                   <th>Estado</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -166,25 +201,92 @@ function DetalleUnidad({ unidad, onVolver, edificios }) {
                   const esMesActual = p.Mes_Ano === mesActual
                   const colores = colorPeriodo(p.ID_estado_periodo)
                   return (
-                    <tr key={p.ID_periodo_contrato} style={esMesActual ? { background: '#fffbf0', fontWeight: 500 } : undefined}>
-                      <td style={{ color: '#aaa', fontSize: '12px' }}>{p.Numero_Cuota}</td>
-                      <td>{p.Mes_Ano}{esMesActual && <span style={{ marginLeft: '6px', fontSize: '11px', color: '#8a6300' }}>◀ actual</span>}</td>
-                      <td>{fmtMoney(p.Monto_Alquiler) || '-'}</td>
-                      <td>{fmtMoney(p.Monto_Expensas) || '-'}</td>
-                      <td>{Number(p.Monto_Cochera) > 0 ? fmtMoney(p.Monto_Cochera) : '-'}</td>
-                      <td>{Number(p.Monto_Municipalidad) > 0 ? fmtMoney(p.Monto_Municipalidad) : '-'}</td>
-                      <td>{Number(p.Monto_Otros) > 0 ? fmtMoney(p.Monto_Otros) : '-'}</td>
-                      <td>{Number(p.Monto_Recargo) > 0 ? fmtMoney(p.Monto_Recargo) : '-'}</td>
-                      <td style={{ fontWeight: 600 }}>{fmtMoney(total)}</td>
-                      <td>
-                        <span style={{
-                          padding: '2px 8px', borderRadius: '10px', fontSize: '12px',
-                          fontWeight: 600, ...colores
-                        }}>
-                          {p.ID_estado_periodo === 'PAGADO' ? 'Pagado' : p.ID_estado_periodo === 'EN_MORA' ? 'En mora' : 'Pendiente'}
-                        </span>
-                      </td>
-                    </tr>
+                    <>
+                      <tr key={p.ID_periodo_contrato} style={esMesActual ? { background: '#fffbf0', fontWeight: 500 } : undefined}>
+                        <td style={{ color: '#aaa', fontSize: '12px' }}>{p.Numero_Cuota}</td>
+                        <td>{p.Mes_Ano}{esMesActual && <span style={{ marginLeft: '6px', fontSize: '11px', color: '#8a6300' }}>◀ actual</span>}</td>
+                        <td>{fmtMoney(p.Monto_Alquiler) || '-'}</td>
+                        <td>{fmtMoney(p.Monto_Expensas) || '-'}</td>
+                        <td>{Number(p.Monto_Cochera) > 0 ? fmtMoney(p.Monto_Cochera) : '-'}</td>
+                        <td>{Number(p.Monto_Municipalidad) > 0 ? fmtMoney(p.Monto_Municipalidad) : '-'}</td>
+                        <td>{Number(p.Monto_Otros) > 0 ? fmtMoney(p.Monto_Otros) : '-'}</td>
+                        <td>{Number(p.Monto_Recargo) > 0 ? fmtMoney(p.Monto_Recargo) : '-'}</td>
+                        <td style={{ fontWeight: 600 }}>{fmtMoney(total)}</td>
+                        <td>
+                          <span style={{
+                            padding: '2px 8px', borderRadius: '10px', fontSize: '12px',
+                            fontWeight: 600, ...colores
+                          }}>
+                            {p.ID_estado_periodo === 'PAGADO' ? 'Pagado' : p.ID_estado_periodo === 'EN_MORA' ? 'En mora' : 'Pendiente'}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          {p.ID_estado_periodo !== 'PAGADO' && (
+                            <button onClick={() => {
+                              setCobroForm({
+                                Monto_Pagado: total,
+                                Fecha_Pago: new Date().toISOString().substring(0, 10),
+                                ID_cuenta_destino: '',
+                                Imputacion_Pago: 'ALQUILER',
+                              })
+                              setCobrando(p.ID_periodo_contrato)
+                            }}>
+                              Registrar cobro
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                      {cobrando === p.ID_periodo_contrato && (
+                        <tr key={p.ID_periodo_contrato + '_cobro'}>
+                          <td colSpan={11}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', padding: '8px 0', flexWrap: 'wrap' }}>
+                              <label style={{ minWidth: '110px' }}>
+                                Monto pagado
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={cobroForm.Monto_Pagado}
+                                  onChange={(e) => setCobroForm({ ...cobroForm, Monto_Pagado: e.target.value })}
+                                />
+                              </label>
+                              <label style={{ minWidth: '130px' }}>
+                                Fecha de pago
+                                <input
+                                  type="date"
+                                  value={cobroForm.Fecha_Pago}
+                                  onChange={(e) => setCobroForm({ ...cobroForm, Fecha_Pago: e.target.value })}
+                                />
+                              </label>
+                              <label style={{ minWidth: '150px' }}>
+                                Cuenta destino
+                                <select
+                                  value={cobroForm.ID_cuenta_destino}
+                                  onChange={(e) => setCobroForm({ ...cobroForm, ID_cuenta_destino: e.target.value })}
+                                >
+                                  <option value="">Seleccionar...</option>
+                                  {cuentas.map(c => (
+                                    <option key={c.ID_cuenta} value={c.ID_cuenta}>{c.Nombre_Cuenta}</option>
+                                  ))}
+                                </select>
+                              </label>
+                              <label style={{ minWidth: '130px' }}>
+                                Imputación
+                                <select
+                                  value={cobroForm.Imputacion_Pago}
+                                  onChange={(e) => setCobroForm({ ...cobroForm, Imputacion_Pago: e.target.value })}
+                                >
+                                  {imputaciones.map(i => (
+                                    <option key={i.ID_imputacion} value={i.ID_imputacion}>{i.Descripcion}</option>
+                                  ))}
+                                </select>
+                              </label>
+                              <button onClick={() => confirmarCobro(p.ID_periodo_contrato)}>Confirmar cobro</button>
+                              <button onClick={() => setCobrando(null)}>Cancelar</button>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
                   )
                 })}
               </tbody>
