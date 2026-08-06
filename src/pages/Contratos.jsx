@@ -180,7 +180,7 @@ function Contratos() {
 
   async function handleDelete(id) {
     setConfirmModal({
-      mensaje: '¿Eliminar este contrato? Se eliminarán también todos sus períodos y garantes asociados.',
+      mensaje: '¿Archivar este contrato? No se eliminará, quedará guardado en el historial.',
       onConfirmar: async () => {
         try {
           await contratosApi.delete(id)

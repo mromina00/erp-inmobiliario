@@ -144,7 +144,7 @@ function Personas() {
 
   async function handleDelete(id) {
     setConfirmModal({
-      mensaje: '¿Eliminar esta persona? Esta acción no se puede deshacer.',
+      mensaje: '¿Archivar esta persona? No se eliminará, quedará guardada pero no aparecerá en los listados.',
       onConfirmar: async () => {
         try {
           await personasApi.delete(id)
