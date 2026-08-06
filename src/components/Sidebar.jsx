@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
+import { UserButton } from '@clerk/clerk-react'
 
 const sections = [
   {
@@ -70,6 +71,9 @@ function Sidebar({ open, onClose }) {
             ))}
           </div>
         ))}
+        <div style={{ padding: '12px 10px', borderTop: '1px solid #e5e5e3', marginTop: '8px' }}>
+          <UserButton afterSignOutUrl="/" showName />
+        </div>
       </div>
     </>
   )
